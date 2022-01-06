@@ -1,0 +1,4 @@
+RollDice:
+https://graphql.org/graphql-js/passing-arguments/
+
+https://graphql.org/learn/queries/

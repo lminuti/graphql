@@ -1,0 +1,3 @@
+{
+  rollDice(numDice: 3, numSides: 6)
+}
