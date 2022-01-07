@@ -32,7 +32,7 @@ type
   private
     { Rules }
     function ArgumentStamement: IGraphQLArgument;
-    procedure ArgumentsStatement(AArguments: TGraphQLArguments);
+    procedure ArgumentsStatement(AArguments: IGraphQLArguments);
     function FieldStatement: IGraphQLField;
     function ObjectStatement: IGraphQLObject;
     procedure Query(AGraphQL: IGraphQL);
@@ -46,7 +46,7 @@ implementation
 { TSyntaxAnalysis }
 
 // arguments = '(' argument [ ',' argument [...] ] } '}'
-procedure TGraphQLBuilder.ArgumentsStatement(AArguments: TGraphQLArguments);
+procedure TGraphQLBuilder.ArgumentsStatement(AArguments: IGraphQLArguments);
 begin
   Expect(TTokenKind.LeftParenthesis);
 
@@ -100,7 +100,7 @@ var
   LFieldName: string;
   LFieldAlias: string;
   LValue: IGraphQLValue;
-  LArguments: TGraphQLArguments;
+  LArguments: IGraphQLArguments;
 begin
   Expect(TTokenKind.Identifier, False);
 

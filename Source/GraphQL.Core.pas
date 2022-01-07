@@ -50,6 +50,15 @@ type
     property Value: TValue read GetValue;
   end;
 
+  IGraphQLArguments = interface
+  ['{9415D410-2BAB-4F06-B8E4-36788036FCBB}']
+    function Count: Integer;
+    function GetArgument(AIndex: Integer): IGraphQLArgument;
+    procedure Add(AArgument: IGraphQLArgument);
+
+    property Arguments[AIndex: Integer]: IGraphQLArgument read GetArgument; default;
+  end;
+
   IGraphQLField = interface
     ['{9C7313F8-7953-4F9E-876B-69B2CDE60865}']
     function GetFieldName: string;

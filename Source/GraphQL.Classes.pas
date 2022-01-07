@@ -31,7 +31,24 @@ type
   TGraphQLFields = class(TList<IGraphQLField>)
   end;
 
-  TGraphQLArguments = class(TList<IGraphQLArgument>)
+  TGraphQLArguments = class(TList<IGraphQLArgument>, IGraphQLArguments)
+  private
+    FRefCount: Integer;
+  public
+    { IInterface }
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+
+    { IGraphQLArguments }
+    procedure Add(AArgument: IGraphQLArgument);
+    function Count: Integer;
+    function GetArgument(AIndex: Integer): IGraphQLArgument;
+
+    procedure AfterConstruction; override;
+    property RefCount: Integer read FRefCount;
+
+    class function NewInstance: TObject; override;
   end;
 
   TGraphQLArgument = class(TInterfacedObject, IGraphQLArgument)
@@ -70,7 +87,7 @@ type
     FFieldName: string;
     FFieldAlias: string;
     FValue: IGraphQLValue;
-    FArguments: TGraphQLArguments;
+    FArguments: IGraphQLArguments;
   public
     { IGraphQLField }
     function GetFieldName: string;
@@ -80,7 +97,7 @@ type
     function ArgumentCount: Integer;
     function ArgumentByName(const AName: string): IGraphQLArgument;
 
-    constructor Create(const AFieldName, AFieldAlias: string; AArguments: TGraphQLArguments; AValue: IGraphQLValue);
+    constructor Create(const AFieldName, AFieldAlias: string; AArguments: IGraphQLArguments; AValue: IGraphQLValue);
     destructor Destroy; override;
   end;
 
@@ -159,7 +176,7 @@ begin
   Result := FArguments.Count;
 end;
 
-constructor TGraphQLField.Create(const AFieldName, AFieldAlias: string; AArguments: TGraphQLArguments; AValue: IGraphQLValue);
+constructor TGraphQLField.Create(const AFieldName, AFieldAlias: string; AArguments: IGraphQLArguments; AValue: IGraphQLValue);
 begin
   inherited Create;
   if Assigned(AArguments) then
@@ -173,7 +190,6 @@ end;
 
 destructor TGraphQLField.Destroy;
 begin
-  FArguments.Free;
   inherited;
 end;
 
@@ -261,6 +277,55 @@ end;
 function TGraphQLArgument.GetValue: TValue;
 begin
   Result := FValue;
+end;
+
+{ TGraphQLArguments }
+
+procedure TGraphQLArguments.Add(AArgument: IGraphQLArgument);
+begin
+  inherited Add(AArgument);
+end;
+
+procedure TGraphQLArguments.AfterConstruction;
+begin
+  inherited;
+  AtomicDecrement(FRefCount);
+end;
+
+function TGraphQLArguments.Count: Integer;
+begin
+  Result := inherited Count;
+end;
+
+function TGraphQLArguments.GetArgument(AIndex: Integer): IGraphQLArgument;
+begin
+  Result := inherited Items[AIndex];
+end;
+
+class function TGraphQLArguments.NewInstance: TObject;
+begin
+  Result := inherited NewInstance;
+  TGraphQLArguments(Result).FRefCount := 1;
+end;
+
+function TGraphQLArguments.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+function TGraphQLArguments._AddRef: Integer;
+begin
+  Result := AtomicIncrement(FRefCount);
+end;
+
+function TGraphQLArguments._Release: Integer;
+begin
+  Result := AtomicDecrement(FRefCount);
+  if Result = 0 then
+    Destroy;
 end;
 
 end.
