@@ -1,0 +1,6 @@
+{
+  hero(id: "1000") {
+    name
+    height
+  }
+}

@@ -1,0 +1,4 @@
+{
+  roll6: rollDice(numDice: 3, numSides: 6) 
+  roll20: rollDice(numDice: 3, numSides: 12) 
+}

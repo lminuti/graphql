@@ -27,10 +27,13 @@ uses
   System.Classes, System.SysUtils, System.Rtti;
 
 type
-  TGraphQLError = class(Exception)
+  EGraphQLError = class(Exception)
   end;
 
-  TGraphQLArgumentNotFound = class(TGraphQLError)
+  EGraphQLArgumentNotFound = class(EGraphQLError)
+  end;
+
+  EGraphQLFieldNotFound = class(EGraphQLError)
   end;
 
   // abstact
@@ -50,12 +53,14 @@ type
   IGraphQLField = interface
     ['{9C7313F8-7953-4F9E-876B-69B2CDE60865}']
     function GetFieldName: string;
+    function GetFieldAlias: string;
     function GetValue: IGraphQLValue;
     function GetArgument(AIndex: Integer): IGraphQLArgument;
     function ArgumentCount: Integer;
     function ArgumentByName(const AName: string): IGraphQLArgument;
 
     property FieldName: string read GetFieldName;
+    property FieldAlias: string read GetFieldAlias;
     property Value: IGraphQLValue read GetValue;
     property Arguments[AIndex: Integer]: IGraphQLArgument read GetArgument;
   end;
@@ -68,8 +73,11 @@ type
     ['{80B1FD62-50BA-4000-8C3C-79FF8F52159E}']
     function FieldCount: Integer;
     function GetField(AIndex: Integer): IGraphQLField;
+    function GetFieldByName(const AName: string): IGraphQLField;
+    function FindFieldByName(const AName: string): IGraphQLField;
 
     property Fields[AIndex: Integer]: IGraphQLField read GetField;
+    property FieldByName[const AName: string]: IGraphQLField read GetFieldByName;
   end;
 
   IGraphQL = interface

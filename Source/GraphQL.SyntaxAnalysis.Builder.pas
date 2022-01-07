@@ -94,18 +94,27 @@ begin
   GraphQL(Result);
 end;
 
-// field = fieldname [ arguments ] [object]
+// field = [alias ':' ] fieldname [ arguments ] [object]
 function TGraphQLBuilder.FieldStatement: IGraphQLField;
 var
   LFieldName: string;
+  LFieldAlias: string;
   LValue: IGraphQLValue;
   LArguments: TGraphQLArguments;
 begin
   Expect(TTokenKind.Identifier, False);
 
   LFieldName := FToken.StringValue;
+  LFieldAlias := LFieldName;
 
   NextToken;
+
+  if FToken.Kind = TTokenKind.Colon then
+  begin
+    NextToken;
+    LFieldName := FToken.StringValue;
+    NextToken;
+  end;
 
   LArguments := TGraphQLArguments.Create;
   if FToken.Kind = TTokenKind.LeftParenthesis then
@@ -116,7 +125,7 @@ begin
   else
     LValue := TGraphQLNull.Create;
 
-  Result := TGraphQLField.Create(LFieldName, LArguments, LValue);
+  Result := TGraphQLField.Create(LFieldName, LFieldAlias, LArguments, LValue);
 end;
 
 // GraphQL = 'query' queryname query | query
@@ -162,15 +171,21 @@ begin
   Expect(TTokenKind.RightCurleyBracket);
 end;
 
-// query = '{' objectpair '}'
+// query = '{' objectpair [ [','] objectpair [ [','] objectpair ] ] '}'
 procedure TGraphQLBuilder.Query(AGraphQL: IGraphQL);
 var
   LField: IGraphQLField;
 begin
   Expect(TTokenKind.LeftCurleyBracket);
 
-  LField := FieldStatement;
-  AGraphQL.AddField(LField);
+  repeat
+    LField := FieldStatement;
+    AGraphQL.AddField(LField);
+
+    if FToken.Kind = TTokenKind.Comma then
+      NextToken;
+
+  until FToken.Kind = TTokenKind.RightCurleyBracket;
 
   Expect(TTokenKind.RightCurleyBracket);
 end;

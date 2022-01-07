@@ -1,0 +1,8 @@
+{
+  empireHero: hero(id: "1004") {
+    name
+  },
+  jediHero: hero(id: "1000") {
+    name
+  }
+}

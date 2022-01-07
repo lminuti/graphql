@@ -54,6 +54,8 @@ type
     procedure Add(AField: IGraphQLField);
     function FieldCount: Integer;
     function GetField(AIndex: Integer): IGraphQLField;
+    function GetFieldByName(const AName: string): IGraphQLField;
+    function FindFieldByName(const AName: string): IGraphQLField;
 
     constructor Create;
     destructor Destroy; override;
@@ -66,17 +68,19 @@ type
   TGraphQLField = class(TInterfacedObject, IGraphQLField)
   private
     FFieldName: string;
+    FFieldAlias: string;
     FValue: IGraphQLValue;
     FArguments: TGraphQLArguments;
   public
     { IGraphQLField }
     function GetFieldName: string;
+    function GetFieldAlias: string;
     function GetValue: IGraphQLValue;
     function GetArgument(AIndex: Integer): IGraphQLArgument;
     function ArgumentCount: Integer;
     function ArgumentByName(const AName: string): IGraphQLArgument;
 
-    constructor Create(const AFieldName: string; AArguments: TGraphQLArguments; AValue: IGraphQLValue);
+    constructor Create(const AFieldName, AFieldAlias: string; AArguments: TGraphQLArguments; AValue: IGraphQLValue);
     destructor Destroy; override;
   end;
 
@@ -147,7 +151,7 @@ begin
     if FArguments[LIndex].Name = AName then
       Exit(FArguments[LIndex]);
   end;
-  raise TGraphQLArgumentNotFound.CreateFmt('Argument [%s] not found', [AName]);
+  raise EGraphQLArgumentNotFound.CreateFmt('Argument [%s] not found', [AName]);
 end;
 
 function TGraphQLField.ArgumentCount: Integer;
@@ -155,7 +159,7 @@ begin
   Result := FArguments.Count;
 end;
 
-constructor TGraphQLField.Create(const AFieldName: string; AArguments: TGraphQLArguments; AValue: IGraphQLValue);
+constructor TGraphQLField.Create(const AFieldName, AFieldAlias: string; AArguments: TGraphQLArguments; AValue: IGraphQLValue);
 begin
   inherited Create;
   if Assigned(AArguments) then
@@ -163,6 +167,7 @@ begin
   else
     FArguments := TGraphQLArguments.Create;
   FFieldName := AFieldName;
+  FFieldAlias := AFieldAlias;
   FValue := AValue;
 end;
 
@@ -175,6 +180,11 @@ end;
 function TGraphQLField.GetArgument(AIndex: Integer): IGraphQLArgument;
 begin
   Result := FArguments[AIndex];
+end;
+
+function TGraphQLField.GetFieldAlias: string;
+begin
+  Result := FFieldAlias;
 end;
 
 function TGraphQLField.GetFieldName: string;
@@ -210,9 +220,28 @@ begin
   Result := FFields.Count;
 end;
 
+function TGraphQLObject.FindFieldByName(const AName: string): IGraphQLField;
+var
+  LIndex: Integer;
+begin
+  Result := nil;
+  for LIndex := 0 to FFields.Count - 1 do
+  begin
+    if FFields[LIndex].FieldName = AName then
+      Result := FFields[LIndex];
+  end;
+end;
+
 function TGraphQLObject.GetField(AIndex: Integer): IGraphQLField;
 begin
   Result := FFields[AIndex];
+end;
+
+function TGraphQLObject.GetFieldByName(const AName: string): IGraphQLField;
+begin
+  Result := FindFieldByName(AName);
+  if not Assigned(Result) then
+    raise EGraphQLFieldNotFound.CreateFmt('Field [%s] not found', [AName]);
 end;
 
 { TGraphQLArgument }

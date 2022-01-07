@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'MainDemo'
-  ClientHeight = 528
-  ClientWidth = 1104
+  ClientHeight = 520
+  ClientWidth = 911
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,6 +12,9 @@ object MainForm: TMainForm
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  DesignSize = (
+    911
+    520)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -24,8 +27,9 @@ object MainForm: TMainForm
   object SourceMemo: TMemo
     Left = 8
     Top = 32
-    Width = 513
-    Height = 361
+    Width = 433
+    Height = 288
+    Anchors = [akLeft, akTop, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -36,9 +40,10 @@ object MainForm: TMainForm
   end
   object LogMemo: TMemo
     Left = 8
-    Top = 399
-    Width = 993
-    Height = 105
+    Top = 366
+    Width = 893
+    Height = 146
+    Anchors = [akLeft, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -53,37 +58,41 @@ object MainForm: TMainForm
     WordWrap = False
   end
   object RunLexerButton: TButton
-    Left = 535
-    Top = 8
+    Left = 8
+    Top = 326
     Width = 150
     Height = 34
+    Anchors = [akLeft, akBottom]
     Caption = 'Read token'
     TabOrder = 2
     OnClick = Button1Click
   end
   object SyntaxCheckButton: TButton
-    Left = 535
-    Top = 48
+    Left = 164
+    Top = 326
     Width = 150
     Height = 34
+    Anchors = [akLeft, akBottom]
     Caption = 'Syntax check'
     TabOrder = 3
     OnClick = SyntaxCheckButtonClick
   end
   object btnTreeBuilder: TButton
-    Left = 535
-    Top = 88
+    Left = 320
+    Top = 326
     Width = 150
     Height = 34
+    Anchors = [akLeft, akBottom]
     Caption = 'GraphBuilder'
     TabOrder = 4
     OnClick = btnTreeBuilderClick
   end
   object SyntaxTreeView: TTreeView
-    Left = 703
+    Left = 458
     Top = 8
-    Width = 298
-    Height = 385
+    Width = 445
+    Height = 312
+    Anchors = [akLeft, akTop, akRight, akBottom]
     Indent = 19
     ReadOnly = True
     TabOrder = 5
@@ -91,7 +100,7 @@ object MainForm: TMainForm
   object FilesComboBox: TComboBox
     Left = 88
     Top = 5
-    Width = 433
+    Width = 353
     Height = 21
     TabOrder = 6
     OnChange = FilesComboBoxChange

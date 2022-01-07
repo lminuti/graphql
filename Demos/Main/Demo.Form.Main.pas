@@ -140,6 +140,14 @@ end;
 
 procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
 
+  function GetFieldNameCaption(LGraphQLField: IGraphQLField): string;
+  begin
+    if LGraphQLField.FieldName = LGraphQLField.FieldAlias then
+      Result := LGraphQLField.FieldName
+    else
+      Result := Format('%s (%s)', [LGraphQLField.FieldName, LGraphQLField.FieldAlias])
+  end;
+
   procedure ShowArguments(LGraphQLField: IGraphQLField; AParentNode: TTreeNode);
   var
     LArgumentsNode: TTreeNode;
@@ -166,7 +174,7 @@ procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
     for LFieldIndex := 0 to AGraphQLObject.FieldCount - 1 do
     begin
       LGraphQLField := AGraphQLObject.Fields[LFieldIndex];
-      LSubNode := SyntaxTreeView.Items.AddChild(AParentNode, LGraphQLField.FieldName);
+      LSubNode := SyntaxTreeView.Items.AddChild(AParentNode, GetFieldNameCaption(LGraphQLField));
       ShowArguments(LGraphQLField, LSubNode);
       if Supports(LGraphQLField.Value, IGraphQLObject) then
       begin
@@ -185,7 +193,7 @@ begin
   for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
   begin
     LGraphQLField := AGraphQL.Fields[LFieldIndex];
-    LSubNode := SyntaxTreeView.Items.AddChild(LRootNode, LGraphQLField.FieldName);
+    LSubNode := SyntaxTreeView.Items.AddChild(LRootNode, GetFieldNameCaption(LGraphQLField));
     ShowArguments(LGraphQLField, LSubNode);
     if Supports(LGraphQLField.Value, IGraphQLObject) then
     begin
