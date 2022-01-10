@@ -65,11 +65,11 @@ You can see the demo to have an idea of the capabilities of this library.
 
 ### Query your API with GraphQL
 
-First of all you need an `API` to query. At this moment *GraphQL for Delphi* supports `class` or simple `procedure and function`. In either case you have to tell the library how to call your API.
+First of all you need an `API` to query. At this moment *GraphQL for Delphi* supports `classes` or simple `procedures and functions`. In either case you have to tell the library how to call your API.
 
 #### Basic API
 
-If you have a simple API made of classic fuctions like this:
+If you have a simple API made of classic functions like this:
 
 ```pascal
 function RollDice(NumDices, NumSides: Integer): Integer;
@@ -118,8 +118,8 @@ json := FRttiQuery.Run(MyQuery);
 
 If you have a class you need to tell the library:
 
-* how to create che instance;
-* if the class is a *singleton* (or if the library should create an new instance for every method call);
+* how to create the instance;
+* if the class is a *singleton* (or if the library should create a new instance for every method call);
 * which methods GraphQL should query.
 
 For example if you have a class like this:
@@ -145,9 +145,9 @@ You need to add the `GraphQLEntity` to every method queryable by GraphQL and reg
   FRttiQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
 ```
 
-The `RegisterResolver` method can add a resolver (any class that implements `IGraphQLResolver`) to the GraphQL engine. A resolver is a simple object that explain to GraphQL how to get the data from the API. You can build your own resolvers or use the resolvers build-in with the library.
+The `RegisterResolver` method can add a resolver (any class that implements `IGraphQLResolver`) to the GraphQL engine. A resolver is a simple object that explains to GraphQL how to get the data from the API. You can build your own resolvers or use the resolvers build-in with the library.
 
-The `TGraphQLRttiResolver` is capable of run method from a class using the [RTTI](https://docwiki.embarcadero.com/RADStudio/Sydney/en/Working_with_RTTI).
+The `TGraphQLRttiResolver` is capable of running methods from a class using the [RTTI](https://docwiki.embarcadero.com/RADStudio/Sydney/en/Working_with_RTTI).
 
 Then you can query your API: 
 
