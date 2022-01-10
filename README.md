@@ -10,6 +10,10 @@ See more complete documentation at https://graphql.org/.
 
 ## Features
 
+* See the GraphQL structure
+* Use simple API (RegisterFunction)
+* Use more complex API (RegisterResolver) 
+
 ### GraphQL tree navigation
 
 With this release of *GraphQL for Delphi* you can explore the GraphQL query and call your API. 
@@ -31,7 +35,7 @@ With a code like this you can build the GraphQL tree:
   end;
 ```
 
-Then you have a struture like this:
+Then you will have a struture like this:
 
 ```
 IGraphQL
@@ -61,7 +65,11 @@ You can see the demo to have an idea of the capabilities of this library.
 
 ### Query your API with GraphQL
 
-First of all you need an API to query, for example:
+First of all you need an `API` to query. At this moment *GraphQL for Delphi* supports `class` or simple `procedure and function`. In either case you have to tell the library how to call your API.
+
+#### Basic API
+
+If you have a simple API made of classic fuctions like this:
 
 ```pascal
 function RollDice(NumDices, NumSides: Integer): Integer;
@@ -71,7 +79,7 @@ function ReverseString(const Value: string): string;
 function StarWarsHero(const Id: string): TStarWarsHero;
 ```
 
-Then you need to register your API:
+Then you need to register your API in this way:
 
 ```pascal
   FRttiQuery := TGraphQLRttiQuery.Create;
@@ -98,7 +106,50 @@ Then you need to register your API:
   );
 ```
 
-Eventually you can query you API: 
+Eventually you can query your API: 
+
+```pascal
+
+json := FRttiQuery.Run(MyQuery);
+
+```
+
+#### Run methods from a class using RTTI
+
+If you have a class you need to tell the library:
+
+* how to create che instance;
+* if the class is a *singleton* (or if the library should create an new instance for every method call);
+* which methods GraphQL should query.
+
+For example if you have a class like this:
+
+```pascal
+  TTestApi = class(TObject)
+  private
+    FCounter: Integer;
+  public
+    [GraphQLEntity]
+    function Sum(a, b: Integer): Integer;
+
+    [GraphQLEntity('mainHero')]
+    function MainHero: TStarWarsHero;
+
+  end;
+```
+
+You need to add the `GraphQLEntity` to every method queryable by GraphQL and register the class:
+
+```pascal
+  FRttiQuery := TGraphQLRttiQuery.Create;
+  FRttiQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
+```
+
+The `RegisterResolver` method can add a resolver (any class that implements `IGraphQLResolver`) to the GraphQL engine. A resolver is a simple object that explain to GraphQL how to get the data from the API. You can build your own resolvers or use the resolvers build-in with the library.
+
+The `TGraphQLRttiResolver` is capable of run method from a class using the [RTTI](https://docwiki.embarcadero.com/RADStudio/Sydney/en/Working_with_RTTI).
+
+Then you can query your API: 
 
 ```pascal
 

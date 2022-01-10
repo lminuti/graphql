@@ -26,7 +26,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Rtti, System.Types, System.IOUtils, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GraphQL.Query.Rtti;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GraphQL.Query.Rtti,
+  GraphQL.Resolver.Core;
 
 type
   TRttiQueryForm = class(TForm)
@@ -57,7 +58,19 @@ implementation
 
 uses
   System.JSON, REST.Json,
-  Demo.API.Test, GraphQL.Utils.JSON;
+  Demo.API.Test, GraphQL.Utils.JSON, GraphQL.Resolver.Rtti;
+
+type
+  TTestApiResolver = class(TInterfacedObject, IGraphQLResolver)
+  private
+    FTestApi: TTestApi;
+  public
+    function Resolve(AParams: TGraphQLParams): TValue;
+
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
 
 { TRttiQueryForm }
 
@@ -65,6 +78,10 @@ constructor TRttiQueryForm.Create(AOwner: TComponent);
 begin
   inherited;
   FRttiQuery := TGraphQLRttiQuery.Create;
+
+  FRttiQuery.RegisterResolver(TTestApiResolver.Create);
+
+  FRttiQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
 
   FRttiQuery.RegisterFunction('rollDice',
     function (AParams: TGraphQLParams) :TValue
@@ -138,6 +155,27 @@ end;
 procedure TRttiQueryForm.RunQueryButtonClick(Sender: TObject);
 begin
   ResultMemo.Text := TJSONHelper.PrettyPrint(FRttiQuery.Run(SourceMemo.Text));
+end;
+
+{ TTestApiResolver }
+
+constructor TTestApiResolver.Create;
+begin
+  FTestApi := TTestApi.Create;
+end;
+
+destructor TTestApiResolver.Destroy;
+begin
+  FTestApi.Free;
+  inherited;
+end;
+
+function TTestApiResolver.Resolve(AParams: TGraphQLParams): TValue;
+begin
+  if AParams.FieldName = 'help' then
+  begin
+    Result := FTestApi.Help;
+  end;
 end;
 
 end.

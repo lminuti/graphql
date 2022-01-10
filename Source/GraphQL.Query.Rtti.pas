@@ -25,19 +25,9 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Rtti, System.JSON, Generics.Collections,
-  GraphQL.Core;
+  GraphQL.Core, GraphQL.Resolver.Core;
 
 type
-  TGraphQLParams = record
-  private
-    FParams: TDictionary<string, TValue>;
-  public
-    function Get(const AName: string): TValue;
-    function Exists(const AName: string): Boolean;
-  public
-    class operator Explicit(ADictionary: TDictionary<string, TValue>): TGraphQLParams;
-  end;
-
   TGraphQLFunc = reference to function (AParams: TGraphQLParams) :TValue;
 
   TGraphQLSerializerFunc = reference to function (AObject: TObject) :TJSONObject;
@@ -45,14 +35,20 @@ type
   TGraphQLFunctionRegistry = class(TDictionary<string,TGraphQLFunc>)
   end;
 
+  TGraphQLResolverRegistry = class(TList<IGraphQLResolver>)
+  end;
+
   TGraphQLRttiQuery = class(TObject)
   private
     FFunctionRegistry: TGraphQLFunctionRegistry;
+    FResolverRegistry: TGraphQLResolverRegistry;
     FSerializerFunc: TGraphQLSerializerFunc;
     function Serialize(AValue: TValue; AField: IGraphQLField): string;
     function SerializeObject(AObject: TObject; AGraphQLObject: IGraphQLObject): string;
+    function Resolve(AParams: TGraphQLParams): TValue;
   public
     procedure RegisterFunction(const AFunctionName: string; AFunc: TGraphQLFunc);
+    procedure RegisterResolver(AResolver: IGraphQLResolver);
     procedure RegisterSerializer(AFunc: TGraphQLSerializerFunc);
 
     function Run(const AQuery: string): string; overload;
@@ -76,6 +72,7 @@ var
 constructor TGraphQLRttiQuery.Create;
 begin
   FFunctionRegistry := TGraphQLFunctionRegistry.Create;
+  FResolverRegistry := TGraphQLResolverRegistry.Create;
   FSerializerFunc :=
     function(AObject: TObject) :TJSONObject
     begin
@@ -86,6 +83,7 @@ end;
 destructor TGraphQLRttiQuery.Destroy;
 begin
   FFunctionRegistry.Free;
+  FResolverRegistry.Free;
   inherited;
 end;
 
@@ -95,9 +93,33 @@ begin
   FFunctionRegistry.Add(AFunctionName, AFunc);
 end;
 
+procedure TGraphQLRttiQuery.RegisterResolver(AResolver: IGraphQLResolver);
+begin
+  FResolverRegistry.Add(AResolver);
+end;
+
 procedure TGraphQLRttiQuery.RegisterSerializer(AFunc: TGraphQLSerializerFunc);
 begin
   FSerializerFunc := AFunc;
+end;
+
+function TGraphQLRttiQuery.Resolve(AParams: TGraphQLParams): TValue;
+var
+  LFunc: TGraphQLFunc;
+  LResolver: IGraphQLResolver;
+begin
+  Result := nil;
+  if FFunctionRegistry.TryGetValue(AParams.FieldName, LFunc) then
+    Exit(LFunc(AParams));
+
+  for LResolver in FResolverRegistry do
+  begin
+    Result := LResolver.Resolve(AParams);
+    if not Result.IsEmpty then
+      Exit;
+  end;
+
+  raise EGraphQLError.CreateFmt('Entity [%s] not found', [AParams.FieldName]);
 end;
 
 function TGraphQLRttiQuery.Run(AGraphQL: IGraphQL): string;
@@ -106,16 +128,13 @@ var
   LArgumentIndex: Integer;
   LField: IGraphQLField;
   LArgument: IGraphQLArgument;
-  //LResults: TArray<TValue>;
-  LFunc: TGraphQLFunc;
+  LParams: TGraphQLParams;
   LParamDictionary: TDictionary<string, TValue>;
 begin
   Result := '';
   for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
   begin
     LField := AGraphQL.Fields[LFieldIndex];
-    if not FFunctionRegistry.TryGetValue(LField.FieldName, LFunc) then
-      raise EGraphQLError.CreateFmt('Entity [%s] not found', [LField.FieldName]);
 
     LParamDictionary := TDictionary<string, TValue>.Create;
     try
@@ -129,7 +148,8 @@ begin
       begin
         Result := Result + ',' + sLineBreak;
       end;
-      Result := Result + '  "' + LField.FieldAlias + '": ' + Serialize(LFunc(TGraphQLParams(LParamDictionary)), LField);
+      LParams := TGraphQLParams.Create(LField.FieldName, LParamDictionary);
+      Result := Result + '  "' + LField.FieldAlias + '": ' + Serialize(Resolve(LParams), LField);
     finally
       LParamDictionary.Free;
     end;
@@ -287,24 +307,6 @@ begin
   finally
     LScanner.Free;
   end;
-end;
-
-{ TGraphQLParams }
-
-function TGraphQLParams.Exists(const AName: string): Boolean;
-begin
-  Result := FParams.ContainsKey(AName);
-end;
-
-class operator TGraphQLParams.Explicit(
-  ADictionary: TDictionary<string, TValue>): TGraphQLParams;
-begin
-  Result.FParams := ADictionary;
-end;
-
-function TGraphQLParams.Get(const AName: string): TValue;
-begin
-  Result := FParams.Items[AName];
 end;
 
 initialization

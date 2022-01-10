@@ -24,7 +24,7 @@ unit Demo.API.Test;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.StrUtils;
+  System.Classes, System.SysUtils, System.StrUtils, GraphQL.Core.Attributes;
 
 type
   TStarWarsHero = class;
@@ -45,6 +45,24 @@ type
 
     constructor Create(const AName: string; AHeight: Double);
     destructor Destroy; override;
+  end;
+
+  TTestApi = class(TObject)
+  private
+    FCounter: Integer;
+  public
+    [GraphQLEntity]
+    function Sum(a, b: Integer): Integer;
+
+    [GraphQLEntity('counter')]
+    function Counter: Integer;
+
+    [GraphQLEntity('mainHero')]
+    function MainHero: TStarWarsHero;
+
+    function Help: string;
+
+    constructor Create;
   end;
 
 function RollDice(NumDices, NumSides: Integer): Integer;
@@ -116,6 +134,34 @@ begin
   for LHero in FFriends do
     LHero.Free;
   inherited;
+end;
+
+{ TTestApi }
+
+function TTestApi.Counter: Integer;
+begin
+  Inc(FCounter);
+  Result := FCounter;
+end;
+
+constructor TTestApi.Create;
+begin
+  FCounter := 0;
+end;
+
+function TTestApi.Help: string;
+begin
+  Result := 'This function is called by a custom resolver'
+end;
+
+function TTestApi.MainHero: TStarWarsHero;
+begin
+  Result := TStarWarsHero.Create('Luke Skywalker', 1.72);;
+end;
+
+function TTestApi.Sum(a, b: Integer): Integer;
+begin
+  Result := a + b;
 end;
 
 end.
