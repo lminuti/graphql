@@ -638,8 +638,8 @@ end;
 
 procedure TScanner.InitKeywords;
 begin
-  FKeywords.Add('true', TTokenKind.KeywordTrue);
-  FKeywords.Add('false', TTokenKind.KeywordFalse);
+//  FKeywords.Add('true', TTokenKind.KeywordTrue);
+//  FKeywords.Add('false', TTokenKind.KeywordFalse);
 end;
 
 function TScanner.IsKeyword(const AIdentifier: string; out ATokenKind: TTokenKind): Boolean;

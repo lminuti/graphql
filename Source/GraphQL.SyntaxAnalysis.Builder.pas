@@ -76,7 +76,14 @@ begin
     TTokenKind.StringLiteral: LValue := FToken.StringValue;
     TTokenKind.IntegerLiteral: LValue := FToken.IntegerValue;
     TTokenKind.FloatLiteral: LValue := FToken.FloatValue;
-    TTokenKind.Identifier: LValue := FToken.StringValue;
+    TTokenKind.Identifier: begin
+      if FToken.StringValue = 'true' then
+        LValue := True
+      else if FToken.StringValue = 'false' then
+        LValue := False
+      else
+        LValue := FToken.StringValue;
+    end
     else
       raise ESyntaxError.Create('String or number expected', FToken.LineNumber, FToken.ColumnNumber);
 

@@ -13,6 +13,7 @@ See more complete documentation at https://graphql.org/.
 * See the GraphQL structure
 * Use simple API (RegisterFunction)
 * Use more complex API (RegisterResolver) 
+* Use API from a ReST server
 
 ### GraphQL tree navigation
 
@@ -82,23 +83,23 @@ function StarWarsHero(const Id: string): TStarWarsHero;
 Then you need to register your API in this way:
 
 ```pascal
-  FRttiQuery := TGraphQLRttiQuery.Create;
+  FQuery := TGraphQLQuery.Create;
 
-  FRttiQuery.RegisterFunction('rollDice',
+  FQuery.RegisterFunction('rollDice',
     function (AParams: TGraphQLParams) :TValue
     begin
       Result := RollDice(AParams.Get('numDice').AsInteger, AParams.Get('numSides').AsInteger);
     end
   );
 
-  FRttiQuery.RegisterFunction('reverseString',
+  FQuery.RegisterFunction('reverseString',
     function (AParams: TGraphQLParams) :TValue
     begin
       Result := ReverseString(AParams.Get('value').AsString);
     end
   );
 
-  FRttiQuery.RegisterFunction('hero',
+  FQuery.RegisterFunction('hero',
     function (AParams: TGraphQLParams) :TValue
     begin
       Result := StarWarsHero(AParams.Get('id').AsString);
@@ -110,7 +111,7 @@ Eventually you can query your API:
 
 ```pascal
 
-json := FRttiQuery.Run(MyQuery);
+json := FQuery.Run(MyQuery);
 
 ```
 
@@ -141,8 +142,8 @@ For example if you have a class like this:
 You need to add the `GraphQLEntity` to every method queryable by GraphQL and register the class:
 
 ```pascal
-  FRttiQuery := TGraphQLRttiQuery.Create;
-  FRttiQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
+  FQuery := TGraphQLQuery.Create;
+  FQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
 ```
 
 The `RegisterResolver` method can add a resolver (any class that implements `IGraphQLResolver`) to the GraphQL engine. A resolver is a simple object that explains to GraphQL how to get the data from the API. You can build your own resolvers or use the resolvers build-in with the library.
@@ -153,7 +154,7 @@ Then you can query your API:
 
 ```pascal
 
-json := FRttiQuery.Run(MyQuery);
+json := FQuery.Run(MyQuery);
 
 ```
 
@@ -172,3 +173,28 @@ How to call simple functions:
 A more complex example:
 
 ![](https://raw.githubusercontent.com/wiki/lminuti/graphql/GraphQL-complex.gif)
+
+
+#### Use API from a ReST server
+
+If you need to use GraphQL to queries a ReST API you can see the `ProxyDemo`. This simple project creates a basic HTTP server that responds to GraphQL query and uses a remote ReST API (https://jsonplaceholder.typicode.com/) as a data source.
+
+The project uses a `TGraphQLReSTResolver` to map the GraphQL fields to the ReST API in this way:
+
+```pascal
+  FQuery := TGraphQLQuery.Create;
+
+  LResolver := TGraphQLReSTResolver.Create;
+  LResolver.MapEntity('posts', 'https://jsonplaceholder.typicode.com/posts/{id}');
+  LResolver.MapEntity('comments', 'https://jsonplaceholder.typicode.com/comments/{id}');
+  LResolver.MapEntity('albums', 'https://jsonplaceholder.typicode.com/albums/{id}');
+  LResolver.MapEntity('todos', 'https://jsonplaceholder.typicode.com/todos/{id}');
+  LResolver.MapEntity('users', 'https://jsonplaceholder.typicode.com/users/{id}');
+
+  FQuery.RegisterResolver(LResolver);
+
+```
+
+Then, when you run the query with `FQuery.Run(...)`, the resolver can call the right ReST API.
+
+![](https://raw.githubusercontent.com/wiki/lminuti/graphql/demo3.png)

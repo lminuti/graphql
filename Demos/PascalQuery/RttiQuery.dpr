@@ -13,8 +13,8 @@ uses
   GraphQL.Resolver.Core in '..\..\Source\GraphQL.Resolver.Core.pas',
   GraphQL.Resolver.Rtti in '..\..\Source\GraphQL.Resolver.Rtti.pas',
   GraphQL.Core.Attributes in '..\..\Source\GraphQL.Core.Attributes.pas',
-  GraphQL.Query.Rtti in '..\..\Source\GraphQL.Query.Rtti.pas',
-  GraphQL.Utils.Rtti in '..\..\Source\GraphQL.Utils.Rtti.pas';
+  GraphQL.Utils.Rtti in '..\..\Source\GraphQL.Utils.Rtti.pas',
+  GraphQL.Query in '..\..\Source\GraphQL.Query.pas';
 
 {$R *.res}
 

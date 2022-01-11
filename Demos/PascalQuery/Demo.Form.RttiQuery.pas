@@ -26,7 +26,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Rtti, System.Types, System.IOUtils, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GraphQL.Query.Rtti,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GraphQL.Query,
   GraphQL.Resolver.Core;
 
 type
@@ -42,7 +42,7 @@ type
     procedure RunQueryButtonClick(Sender: TObject);
   private
     FSampleDir: string;
-    FRttiQuery: TGraphQLRttiQuery;
+    FQuery: TGraphQLQuery;
     procedure ReadFiles;
   public
     constructor Create(AOwner: TComponent); override;
@@ -77,27 +77,27 @@ type
 constructor TRttiQueryForm.Create(AOwner: TComponent);
 begin
   inherited;
-  FRttiQuery := TGraphQLRttiQuery.Create;
+  FQuery := TGraphQLQuery.Create;
 
-  FRttiQuery.RegisterResolver(TTestApiResolver.Create);
+  FQuery.RegisterResolver(TTestApiResolver.Create);
 
-  FRttiQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
+  FQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
 
-  FRttiQuery.RegisterFunction('rollDice',
+  FQuery.RegisterFunction('rollDice',
     function (AParams: TGraphQLParams) :TValue
     begin
       Result := RollDice(AParams.Get('numDice').AsInteger, AParams.Get('numSides').AsInteger);
     end
   );
 
-  FRttiQuery.RegisterFunction('reverseString',
+  FQuery.RegisterFunction('reverseString',
     function (AParams: TGraphQLParams) :TValue
     begin
       Result := ReverseString(AParams.Get('value').AsString);
     end
   );
 
-  FRttiQuery.RegisterFunction('hero',
+  FQuery.RegisterFunction('hero',
     function (AParams: TGraphQLParams) :TValue
     begin
       if AParams.Exists('id') then
@@ -116,7 +116,7 @@ end;
 
 destructor TRttiQueryForm.Destroy;
 begin
-  FRttiQuery.Free;
+  FQuery.Free;
   inherited;
 end;
 
@@ -154,7 +154,7 @@ end;
 
 procedure TRttiQueryForm.RunQueryButtonClick(Sender: TObject);
 begin
-  ResultMemo.Text := TJSONHelper.PrettyPrint(FRttiQuery.Run(SourceMemo.Text));
+  ResultMemo.Text := TJSONHelper.PrettyPrint(FQuery.Run(SourceMemo.Text));
 end;
 
 { TTestApiResolver }
