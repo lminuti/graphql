@@ -127,7 +127,7 @@ begin
   if FToken.Kind = TTokenKind.LeftParenthesis then
     ArgumentsStatement(LArguments);
 
-  if FToken.Kind = TTokenKind.LeftCurleyBracket then
+  if FToken.Kind = TTokenKind.LeftCurlyBracket then
     LValue := ObjectStatement
   else
     LValue := TGraphQLNull.Create;
@@ -163,7 +163,7 @@ function TGraphQLBuilder.ObjectStatement: IGraphQLObject;
 var
   LValue: TGraphQLObject;
 begin
-  Expect(TTokenKind.LeftCurleyBracket);
+  Expect(TTokenKind.LeftCurlyBracket);
 
   LValue := TGraphQLObject.Create;
   Result := LValue;
@@ -173,9 +173,9 @@ begin
     if FToken.Kind = TTokenKind.Comma then
       NextToken;
 
-  until FToken.Kind = TTokenKind.RightCurleyBracket;
+  until FToken.Kind = TTokenKind.RightCurlyBracket;
 
-  Expect(TTokenKind.RightCurleyBracket);
+  Expect(TTokenKind.RightCurlyBracket);
 end;
 
 // query = '{' objectpair [ [','] objectpair [ [','] objectpair ] ] '}'
@@ -183,7 +183,7 @@ procedure TGraphQLBuilder.Query(AGraphQL: IGraphQL);
 var
   LField: IGraphQLField;
 begin
-  Expect(TTokenKind.LeftCurleyBracket);
+  Expect(TTokenKind.LeftCurlyBracket);
 
   repeat
     LField := FieldStatement;
@@ -192,9 +192,9 @@ begin
     if FToken.Kind = TTokenKind.Comma then
       NextToken;
 
-  until FToken.Kind = TTokenKind.RightCurleyBracket;
+  until FToken.Kind = TTokenKind.RightCurlyBracket;
 
-  Expect(TTokenKind.RightCurleyBracket);
+  Expect(TTokenKind.RightCurlyBracket);
 end;
 
 end.

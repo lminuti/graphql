@@ -112,7 +112,7 @@ end;
 // node = object | field
 procedure TSyntaxChecker.NodeStatement;
 begin
-  if FToken.Kind = TTokenKind.LeftCurleyBracket then
+  if FToken.Kind = TTokenKind.LeftCurlyBracket then
     ObjectStatement
   else
     FieldStatement;
@@ -121,25 +121,25 @@ end;
 // object = '{' { node } '}'
 procedure TSyntaxChecker.ObjectStatement;
 begin
-  Expect(TTokenKind.LeftCurleyBracket);
+  Expect(TTokenKind.LeftCurlyBracket);
 
   repeat
     NodeStatement;
-  until FToken.Kind = TTokenKind.RightCurleyBracket;
+  until FToken.Kind = TTokenKind.RightCurlyBracket;
 
-  Expect(TTokenKind.RightCurleyBracket);
+  Expect(TTokenKind.RightCurlyBracket);
 end;
 
 // query = '{' field object '}'
 procedure TSyntaxChecker.Query;
 begin
-  Expect(TTokenKind.LeftCurleyBracket);
+  Expect(TTokenKind.LeftCurlyBracket);
 
   FieldStatement;
 
   ObjectStatement;
 
-  Expect(TTokenKind.RightCurleyBracket);
+  Expect(TTokenKind.RightCurlyBracket);
 end;
 
 end.
