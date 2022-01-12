@@ -201,8 +201,8 @@ Then, when you run the query with `FQuery.Run(...)`, the resolver can call the r
 
 ## Todo
 
-* Schemas, types and validation
-* Variables
-* Fragments
-* Directives
-* Mutations
+* :fire: `Variables`. GraphQL has a first-class way to factor dynamic values out of the query, and pass them as a separate dictionary. These values are called variables.
+* :fire: `Schemas`, `types` and `validation`. Every GraphQL service defines a set of types which completely describe the set of possible data you can query on that service. Then, when queries come in, they are validated and executed against that schema.
+* :thumbsup: `Fragments`. Fragments let you construct sets of fields, and then include them in queries where you need to.
+* :question: `Directives`. A directive can be attached to a field or fragment inclusion, and can affect execution of the query in any way the server desires.
+* :question: `Mutations`. Just like ReST any query can might end up causing some side-effects. However, it's useful to establish a convention that any operations that cause writes should be sent explicitly via a mutation.
