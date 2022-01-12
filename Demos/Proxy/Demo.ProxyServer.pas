@@ -24,7 +24,7 @@ unit Demo.ProxyServer;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti,
+  System.Classes, System.SysUtils, System.Rtti, System.JSON,
   IdHttpServer, IdContext, IdCustomHTTPServer, IdHeaderList,
   GraphQL.Resolver.Core, GraphQL.Query;
 
@@ -46,6 +46,7 @@ type
 
     function CreateResolver: IGraphQLResolver;
     procedure AsyncLog(const AMessage: string);
+    function ErrorToJSON(E: Exception): string;
   public
     property Port: Integer read FPort write FPort;
     property Active: Boolean read GetActive write SetActive;
@@ -63,7 +64,7 @@ implementation
 { TProxyServer }
 
 uses
-  GraphQL.Resolver.ReST;
+  GraphQL.Resolver.ReST, GraphQL.Lexer.Core;
 
 procedure TProxyServer.AsyncLog(const AMessage: string);
 var
@@ -137,25 +138,73 @@ begin
   Result := FHttpServer.Active;
 end;
 
+function TProxyServer.ErrorToJSON(E: Exception): string;
+var
+  LJSONError, LJSONErrorItem, LJSONPosition: TJSONObject;
+  LJSONErrors: TJSONArray;
+begin
+  LJSONError := TJSONObject.Create;
+  try
+    LJSONErrorItem := TJSONObject.Create;
+    LJSONErrorItem.AddPair('message', E.Message);
+
+    if E is EScannerError then
+    begin
+      LJSONPosition := TJSONObject.Create;
+      LJSONPosition.AddPair('line', TJSONNumber.Create(EScannerError(E).Line));
+      LJSONPosition.AddPair('column', TJSONNumber.Create(EScannerError(E).Col));
+      LJSONErrorItem.AddPair('locations', LJSONPosition);
+    end;
+
+    LJSONErrors := TJSONArray.Create;
+    LJSONErrors.AddElement(LJSONErrorItem);
+    LJSONError.AddPair('errors', LJSONErrors);
+
+    Result := LJSONError.ToJSON;
+  finally
+    LJSONError.Free;
+  end;
+end;
+
 procedure TProxyServer.HandleCommandGet(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 var
-  LQuery: UTF8String;
+  LRequestContent: UTF8String;
   LPostStream: TStream;
+  LJSONValue: TJSONValue;
+  LQuery: string;
 begin
   LPostStream := TStream(AContext.Data);
   try
 
     AResponseInfo.ContentType := 'application/json';
-    LQuery := '';
-    if LPostStream.Size > 0 then
-    begin
-      LPostStream.Position := 0;
-      SetLength(LQuery, LPostStream.Size);
-      LPostStream.Read(LQuery[1], LPostStream.Size);
+    try
+      LRequestContent := '';
+      if LPostStream.Size > 0 then
+      begin
+        LPostStream.Position := 0;
+        SetLength(LRequestContent, LPostStream.Size);
+        LPostStream.Read(LRequestContent[1], LPostStream.Size);
+      end;
+      LJSONValue := TJSONObject.ParseJSONValue(LRequestContent);
+      try
+        if not Assigned(LJSONValue) or (not (LJSONValue is TJSONObject)) then
+          raise Exception.Create('Invalid request');
+
+        LQuery := TJSONObject(LJSONValue).GetValue<string>('query');
+        AsyncLog('Request: ' + ARequestInfo.Command + ' ' + ARequestInfo.Document + ' body>>> ' + LQuery);
+        AResponseInfo.ContentText :=
+          FQuery.Run(LQuery);
+      finally
+        LJSONValue.Free;
+      end;
+    except
+      on E: Exception do
+      begin
+        AResponseInfo.ResponseNo := 500;
+        AResponseInfo.ContentText := ErrorToJSON(E);
+      end;
     end;
-    AsyncLog('Request: ' + ARequestInfo.Command + ' ' + ARequestInfo.Document + ' body>>> ' + string(LQuery));
-    AResponseInfo.ContentText := FQuery.Run(string(LQuery));
 
   finally
     LPostStream.Free;

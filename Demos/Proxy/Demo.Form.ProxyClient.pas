@@ -121,7 +121,9 @@ begin
     btnStart.Click;
   end;
 
-  LStringStream := TStringStream.Create(SourceMemo.Text, TEncoding.UTF8);
+  memLog.Clear;
+
+  LStringStream := TStringStream.Create('{"query":' + TJSONHelper.QuoteString(SourceMemo.Text) + '}', TEncoding.UTF8);
   try
     ResultMemo.Text := TJSONHelper.PrettyPrint(IdHTTP1.Post('http://localhost:' + edtPort.Text, LStringStream));
   finally

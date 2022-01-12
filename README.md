@@ -198,3 +198,11 @@ The project uses a `TGraphQLReSTResolver` to map the GraphQL fields to the ReST 
 Then, when you run the query with `FQuery.Run(...)`, the resolver can call the right ReST API.
 
 ![](https://raw.githubusercontent.com/wiki/lminuti/graphql/demo3.png)
+
+## Todo
+
+* Schemas, types and validation
+* Variables
+* Fragments
+* Directives
+* Mutations

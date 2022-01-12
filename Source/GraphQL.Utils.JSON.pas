@@ -51,8 +51,10 @@ end;
 
 class function TJSONHelper.PrettyPrint(const AJSONString: string): string;
 var
+  LPrevousChar: Char;
   LChar: Char;
   LOffset: Integer;
+  LInString: Boolean;
 
   function Spaces(AOffset: Integer): string;
   begin
@@ -62,9 +64,20 @@ var
 begin
   Result := '';
   LOffset := 0;
+  LPrevousChar := #0;
+  LInString := False;
   for LChar in AJSONString do
   begin
-    if LChar = '{' then
+    if (LChar = '"') and (LPrevousChar <> '\') then
+    begin
+      LInString := not LInString;
+      Result := Result + LChar;
+    end
+    else if LInString then
+    begin
+      Result := Result + LChar;
+    end
+    else if LChar = '{' then
     begin
       Inc(LOffset);
       Result := Result + LChar;
@@ -100,6 +113,7 @@ begin
     end
     else
       Result := Result + LChar;
+    LPrevousChar := LChar;
   end;
 end;
 

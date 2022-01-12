@@ -182,7 +182,7 @@ object MainProxyForm: TMainProxyForm
     Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
     Request.Ranges.Units = 'bytes'
     Request.Ranges = <>
-    HTTPOptions = [hoForceEncodeParams]
+    HTTPOptions = [hoForceEncodeParams, hoNoParseMetaHTTPEquiv, hoNoProtocolErrorException, hoWantProtocolErrorContent]
     Left = 432
     Top = 88
   end
