@@ -24,7 +24,7 @@ unit GraphQL.Resolver.Rtti;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.SyncObjs,
+  System.Classes, System.SysUtils, System.Rtti, System.JSON, System.SyncObjs,
   GraphQL.Core, GraphQL.Resolver.Core;
 
 type

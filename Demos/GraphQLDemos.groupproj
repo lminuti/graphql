@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{7B8A8CED-560E-44E6-AC74-765E5D6DA51A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Main\MainDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="PascalQuery\RttiQuery.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Proxy\ProxyDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="MainDemo">
+        <MSBuild Projects="Main\MainDemo.dproj"/>
+    </Target>
+    <Target Name="MainDemo:Clean">
+        <MSBuild Projects="Main\MainDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MainDemo:Make">
+        <MSBuild Projects="Main\MainDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="RttiQuery">
+        <MSBuild Projects="PascalQuery\RttiQuery.dproj"/>
+    </Target>
+    <Target Name="RttiQuery:Clean">
+        <MSBuild Projects="PascalQuery\RttiQuery.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="RttiQuery:Make">
+        <MSBuild Projects="PascalQuery\RttiQuery.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ProxyDemo">
+        <MSBuild Projects="Proxy\ProxyDemo.dproj"/>
+    </Target>
+    <Target Name="ProxyDemo:Clean">
+        <MSBuild Projects="Proxy\ProxyDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ProxyDemo:Make">
+        <MSBuild Projects="Proxy\ProxyDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="MainDemo;RttiQuery;ProxyDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="MainDemo:Clean;RttiQuery:Clean;ProxyDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="MainDemo:Make;RttiQuery:Make;ProxyDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

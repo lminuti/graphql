@@ -150,6 +150,11 @@ begin
     end;
   end;
 
+  if Assigned(AParams.Parent) then
+  begin
+    Result := StringReplace(Result, '{parentId}', TNetEncoding.URL.EncodeQuery(AParams.Parent.GetValue<string>('id')), []);
+  end;
+
   // Strip templates
   LMatches := TRegEx.Matches(Result, '\{.+\}');
   for LMatch in LMatches do

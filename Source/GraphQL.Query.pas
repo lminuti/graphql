@@ -43,10 +43,10 @@ type
     FFunctionRegistry: TGraphQLFunctionRegistry;
     FResolverRegistry: TGraphQLResolverRegistry;
     FSerializerFunc: TGraphQLSerializerFunc;
-    function Serialize(AValue: TValue; AField: IGraphQLField): string;
-    function SerializeObject(AObject: TObject; AGraphQLObject: IGraphQLObject): string;
     function Resolve(AParams: TGraphQLParams): TValue; overload;
-    function Resolve(AField: IGraphQLField): TValue; overload;
+    function Resolve(AField: IGraphQLField; AParent: TJSONObject): TValue; overload;
+    function ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject): TJSONValue;
+    function ValueToJSON(AValue: TValue; AField: IGraphQLField): TJSONValue;
   public
     procedure RegisterFunction(const AFunctionName: string; AFunc: TGraphQLFunc);
     procedure RegisterResolver(AResolver: IGraphQLResolver);
@@ -104,12 +104,13 @@ begin
   FSerializerFunc := AFunc;
 end;
 
-function TGraphQLQuery.Resolve(AField: IGraphQLField): TValue;
+function TGraphQLQuery.Resolve(AField: IGraphQLField; AParent: TJSONObject): TValue;
 var
   LArgument: IGraphQLArgument;
   LArgumentIndex: Integer;
   LParams: TGraphQLParams;
   LParamDictionary: TDictionary<string, TValue>;
+  LFieldName: string;
 begin
   LParamDictionary := TDictionary<string, TValue>.Create;
   try
@@ -119,7 +120,12 @@ begin
       LParamDictionary.Add(LArgument.Name, LArgument.Value);
     end;
 
-    LParams := TGraphQLParams.Create(AField.FieldName, LParamDictionary);
+    if Assigned(AField.ParentField) then
+      LFieldName := AField.ParentField.FieldName + '/' + AField.FieldName
+    else
+      LFieldName := AField.FieldName;
+
+    LParams := TGraphQLParams.Create(LFieldName, LParamDictionary, AParent);
     Result := Resolve(LParams);
   finally
     LParamDictionary.Free;
@@ -149,43 +155,44 @@ function TGraphQLQuery.Run(AGraphQL: IGraphQL): string;
 var
   LFieldIndex: Integer;
   LField: IGraphQLField;
+  LJSONObject: TJSONObject;
 begin
-  Result := '';
-  for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
-  begin
-    LField := AGraphQL.Fields[LFieldIndex];
-
-    if Result <> '' then
+  LJSONObject := TJSONObject.Create;
+  try
+    for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
     begin
-      Result := Result + ',' + sLineBreak;
-    end;
-    Result := Result + '  "' + LField.FieldAlias + '": ' + Serialize(Resolve(LField), LField);
+      LField := AGraphQL.Fields[LFieldIndex];
 
+      LJSONObject.AddPair(LField.FieldAlias, ValueToJSON(Resolve(LField, nil), LField));
+
+    end;
+    Result := LJSONObject.ToJSON;
+  finally
+    LJSONObject.Free;
   end;
-  Result := '{' + sLineBreak + Result + sLineBreak + '}';
 end;
 
-function TGraphQLQuery.Serialize(AValue: TValue; AField: IGraphQLField): string;
+function TGraphQLQuery.ValueToJSON(AValue: TValue; AField: IGraphQLField): TJSONValue;
 var
   LGraphQLObject: IGraphQLObject;
 begin
   case AValue.Kind of
-    tkInteger: Result := AValue.AsInteger.ToString;
+    tkInteger: Result := TJSONNumber.Create(AValue.AsInteger);
     tkString,
     tkLString,
     tkWString,
-    tkUString: Result := TJSONHelper.QuoteString(AValue.AsString);
+    tkUString: Result := TJSONString.Create(AValue.AsString);
     tkClass: begin
       if Supports(AField.Value, IGraphQLObject)  then
         LGraphQLObject := AField.Value as IGraphQLObject
       else
         LGraphQLObject := nil;
 
-      Result := SerializeObject(AValue.AsObject, LGraphQLObject);
+      Result := ObjectToJSON(AValue.AsObject, LGraphQLObject);
       AValue.AsObject.Free;
     end;
-    tkFloat: Result := FloatToStr(AValue.AsExtended, JSONFormatSettings);
-    tkInt64: Result := IntToStr(AValue.AsInt64);
+    tkFloat: Result := TJSONNumber.Create(AValue.AsExtended);
+    tkInt64: Result := TJSONNumber.Create(AValue.AsInt64);
 //    tkClassRef
 //    tkChar,
 //    tkEnumeration,
@@ -202,7 +209,7 @@ begin
   end;
 end;
 
-function TGraphQLQuery.SerializeObject(AObject: TObject; AGraphQLObject: IGraphQLObject): string;
+function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject): TJSONValue;
 
   function CloneObject(LJSONObject: TJSONObject; AGraphQLObject: IGraphQLObject): TJSONObject; forward;
 
@@ -255,46 +262,53 @@ function TGraphQLQuery.SerializeObject(AObject: TObject; AGraphQLObject: IGraphQ
     LValue: TJSONValue;
     LClonedValue: TJSONValue;
     LFieldIndex: Integer;
+    LFreeValue: Boolean;
   begin
     if not Assigned(AGraphQLObject) then
       Exit(nil);
 
     LClonedObject := TJSONObject.Create;
+    try
 
-    for LFieldIndex := 0 to AGraphQLObject.FieldCount - 1 do
-    begin
-      LField := AGraphQLObject.Fields[LFieldIndex];
-      LValue := LJSONObject.Values[LField.FieldName];
-
-//      if not Assigned(LValue) then
-//        LValue := Resolve(LField);
-
-      if Assigned(LValue) then
+      for LFieldIndex := 0 to AGraphQLObject.FieldCount - 1 do
       begin
-        LClonedValue := CloneValue(LValue, LField.Value);
-        if Assigned(LClonedValue) then
-          LClonedObject.AddPair(LField.FieldAlias, LClonedValue);
+        LFreeValue := False;
+        LField := AGraphQLObject.Fields[LFieldIndex];
+        LValue := LJSONObject.Values[LField.FieldName];
+        try
+
+          if not Assigned(LValue) then
+          begin
+            LValue := ValueToJSON(Resolve(LField, LJSONObject), LField);
+            LFreeValue := True;
+          end;
+
+          if Assigned(LValue) then
+          begin
+            LClonedValue := CloneValue(LValue, LField.Value);
+            if Assigned(LClonedValue) then
+              LClonedObject.AddPair(LField.FieldAlias, LClonedValue);
+          end;
+        finally
+          if LFreeValue and Assigned(LValue) then
+            LValue.Free;
+        end;
       end;
+      Result := LClonedObject;
+    except
+      LClonedObject.Free;
+      raise;
     end;
-    Result := LClonedObject;
   end;
 
 var
   LJSONObject: TJSONObject;
   LJSONFilteredObject: TJSONValue;
-  LFreeJSONObject: Boolean;
 begin
-  LFreeJSONObject := False;
   if AObject is TJSONArray then
   begin
-
     LJSONFilteredObject := CloneValue(TJSONArray(AObject), AGraphQLObject);
-    try
-      Result := LJSONFilteredObject.ToJSON;
-    finally
-      LJSONFilteredObject.Free;
-    end;
-    Exit;
+    Exit(LJSONFilteredObject);
   end;
 
   if AObject is TJSONObject then
@@ -304,28 +318,22 @@ begin
   else
   begin
     LJSONObject := FSerializerFunc(AObject);
-    LFreeJSONObject := True;
   end;
-  try
 
-    if not Assigned(AGraphQLObject) then
-    begin
-      Result := LJSONObject.ToJSON;
-    end
-    else
-    begin
+  if not Assigned(AGraphQLObject) then
+  begin
+    LJSONFilteredObject := LJSONObject;
+  end
+  else
+  begin
+    try
       LJSONFilteredObject := CloneObject(LJSONObject, AGraphQLObject);
-      try
-        Result := LJSONFilteredObject.ToJSON;
-      finally
-        LJSONFilteredObject.Free;
-      end;
+    finally
+      if LJSONObject <> AObject then
+        LJSONObject.Free;
     end;
-
-  finally
-    if LFreeJSONObject then
-      LJSONObject.Free;
   end;
+  Result := LJSONFilteredObject;
 end;
 
 function TGraphQLQuery.Run(const AQuery: string): string;

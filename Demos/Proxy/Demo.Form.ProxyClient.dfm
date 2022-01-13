@@ -79,20 +79,22 @@ object MainProxyForm: TMainProxyForm
     Font.Style = []
     Lines.Strings = (
       '{'
-      '  test'
       '  users(id:1) {'
       '    id'
       '    name'
       '    address {'
       '      city'
       '    }'
-      '    todos {'
+      '    todos(completed: true) {'
       '      title'
+      '      completed'
+      '      userId'
       '    }'
-      '  }'
-      '  todos(userId:1,completed:true) {'
-      '    id'
-      '    title'
+      '    posts {'
+      '      title'
+      '      body'
+      '      userId'
+      '    }'
       '  }'
       '}')
     ParentFont = False

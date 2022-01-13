@@ -67,7 +67,9 @@ type
     function GetArgument(AIndex: Integer): IGraphQLArgument;
     function ArgumentCount: Integer;
     function ArgumentByName(const AName: string): IGraphQLArgument;
+    function GetParentField: IGraphQLField;
 
+    property ParentField: IGraphQLField read GetParentField;
     property FieldName: string read GetFieldName;
     property FieldAlias: string read GetFieldAlias;
     property Value: IGraphQLValue read GetValue;

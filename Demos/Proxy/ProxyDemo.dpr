@@ -1,6 +1,7 @@
 program ProxyDemo;
 
 uses
+  FastMM4,
   Vcl.Forms,
   Demo.Form.ProxyClient in 'Demo.Form.ProxyClient.pas' {MainProxyForm},
   Demo.ProxyServer in 'Demo.ProxyServer.pas',
@@ -18,6 +19,7 @@ uses
 {$R *.res}
 
 begin
+  //ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainProxyForm, MainProxyForm);

@@ -93,7 +93,6 @@
         </DelphiCompile>
         <DCCReference Include="Demo.Form.ProxyClient.pas">
             <Form>MainProxyForm</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Demo.ProxyServer.pas"/>
         <DCCReference Include="..\..\Source\GraphQL.Query.pas"/>

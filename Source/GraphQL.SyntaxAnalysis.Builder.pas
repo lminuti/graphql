@@ -33,8 +33,8 @@ type
     { Rules }
     function ArgumentStamement: IGraphQLArgument;
     procedure ArgumentsStatement(AArguments: IGraphQLArguments);
-    function FieldStatement: IGraphQLField;
-    function ObjectStatement: IGraphQLObject;
+    function FieldStatement(AParentField: IGraphQLField): IGraphQLField;
+    function ObjectStatement(AParentField: IGraphQLField): IGraphQLObject;
     procedure Query(AGraphQL: IGraphQL);
     procedure GraphQL(AGraphQL: IGraphQL);
   public
@@ -102,12 +102,13 @@ begin
 end;
 
 // field = [alias ':' ] fieldname [ arguments ] [object]
-function TGraphQLBuilder.FieldStatement: IGraphQLField;
+function TGraphQLBuilder.FieldStatement(AParentField: IGraphQLField): IGraphQLField;
 var
   LFieldName: string;
   LFieldAlias: string;
   LValue: IGraphQLValue;
   LArguments: IGraphQLArguments;
+  LGraphQLField: TGraphQLField;
 begin
   Expect(TTokenKind.Identifier, False);
 
@@ -127,12 +128,21 @@ begin
   if FToken.Kind = TTokenKind.LeftParenthesis then
     ArgumentsStatement(LArguments);
 
-  if FToken.Kind = TTokenKind.LeftCurlyBracket then
-    LValue := ObjectStatement
-  else
-    LValue := TGraphQLNull.Create;
+  LGraphQLField := TGraphQLField.Create(AParentField, LFieldName, LFieldAlias, LArguments);
+  try
 
-  Result := TGraphQLField.Create(LFieldName, LFieldAlias, LArguments, LValue);
+    if FToken.Kind = TTokenKind.LeftCurlyBracket then
+      LValue := ObjectStatement(LGraphQLField as IGraphQLField)
+    else
+      LValue := TGraphQLNull.Create;
+
+    LGraphQLField.SetValue(LValue);
+
+  except
+    LGraphQLField.Free;
+    raise;
+  end;
+  Result := LGraphQLField;
 end;
 
 // GraphQL = 'query' queryname query | query
@@ -159,7 +169,7 @@ begin
 end;
 
 // object = '{' { field [,] } '}'
-function TGraphQLBuilder.ObjectStatement: IGraphQLObject;
+function TGraphQLBuilder.ObjectStatement(AParentField: IGraphQLField): IGraphQLObject;
 var
   LValue: TGraphQLObject;
 begin
@@ -169,7 +179,7 @@ begin
   Result := LValue;
 
   repeat
-    LValue.Add(FieldStatement);
+    LValue.Add(FieldStatement(AParentField));
     if FToken.Kind = TTokenKind.Comma then
       NextToken;
 
@@ -186,7 +196,7 @@ begin
   Expect(TTokenKind.LeftCurlyBracket);
 
   repeat
-    LField := FieldStatement;
+    LField := FieldStatement(nil);
     AGraphQL.AddField(LField);
 
     if FToken.Kind = TTokenKind.Comma then

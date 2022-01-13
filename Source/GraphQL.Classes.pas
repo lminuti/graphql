@@ -88,6 +88,8 @@ type
     FFieldAlias: string;
     FValue: IGraphQLValue;
     FArguments: IGraphQLArguments;
+    [unsafe]
+    FParentField: IGraphQLField;
   public
     { IGraphQLField }
     function GetFieldName: string;
@@ -96,8 +98,11 @@ type
     function GetArgument(AIndex: Integer): IGraphQLArgument;
     function ArgumentCount: Integer;
     function ArgumentByName(const AName: string): IGraphQLArgument;
+    function GetParentField: IGraphQLField;
 
-    constructor Create(const AFieldName, AFieldAlias: string; AArguments: IGraphQLArguments; AValue: IGraphQLValue);
+    procedure SetValue(AValue: IGraphQLValue);
+
+    constructor Create(AParentField: IGraphQLField; const AFieldName, AFieldAlias: string; AArguments: IGraphQLArguments);
     destructor Destroy; override;
   end;
 
@@ -176,7 +181,7 @@ begin
   Result := FArguments.Count;
 end;
 
-constructor TGraphQLField.Create(const AFieldName, AFieldAlias: string; AArguments: IGraphQLArguments; AValue: IGraphQLValue);
+constructor TGraphQLField.Create(AParentField: IGraphQLField; const AFieldName, AFieldAlias: string; AArguments: IGraphQLArguments);
 begin
   inherited Create;
   if Assigned(AArguments) then
@@ -185,7 +190,7 @@ begin
     FArguments := TGraphQLArguments.Create;
   FFieldName := AFieldName;
   FFieldAlias := AFieldAlias;
-  FValue := AValue;
+  FParentField := AParentField;
 end;
 
 destructor TGraphQLField.Destroy;
@@ -208,9 +213,19 @@ begin
   Result := FFieldName;
 end;
 
+function TGraphQLField.GetParentField: IGraphQLField;
+begin
+  Result := FParentField;
+end;
+
 function TGraphQLField.GetValue: IGraphQLValue;
 begin
   Result := FValue;
+end;
+
+procedure TGraphQLField.SetValue(AValue: IGraphQLValue);
+begin
+  FValue := AValue;
 end;
 
 { TGraphQLObject }

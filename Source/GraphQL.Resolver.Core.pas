@@ -24,13 +24,14 @@ unit GraphQL.Resolver.Core;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, Generics.Collections;
+  System.Classes, System.SysUtils, System.Rtti, System.JSON, Generics.Collections;
 
 type
   TGraphQLParams = record
   private
     FFieldName: string;
     FParams: TDictionary<string, TValue>;
+    FParent: TJSONObject;
   public
     function Get(const AName: string): TValue;
     function Exists(const AName: string): Boolean;
@@ -38,8 +39,9 @@ type
     function GetEnumerator: TDictionary<string, TValue>.TPairEnumerator;
 
     property FieldName: string read FFieldName;
+    property Parent: TJSONObject read FParent;
 
-    constructor Create(const AFieldName: string; AParams: TDictionary<string, TValue>);
+    constructor Create(const AFieldName: string; AParams: TDictionary<string, TValue>; AParent: TJSONObject);
   end;
 
   IGraphQLResolver = interface
@@ -57,10 +59,11 @@ begin
 end;
 
 constructor TGraphQLParams.Create(const AFieldName: string;
-  AParams: TDictionary<string, TValue>);
+  AParams: TDictionary<string, TValue>; AParent: TJSONObject);
 begin
   FFieldName := AFieldName;
   FParams := AParams;
+  FParent := AParent;
 end;
 
 function TGraphQLParams.Exists(const AName: string): Boolean;

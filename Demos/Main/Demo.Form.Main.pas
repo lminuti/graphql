@@ -140,12 +140,12 @@ end;
 
 procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
 
-  function GetFieldNameCaption(LGraphQLField: IGraphQLField): string;
+  function GetFieldNameCaption(AGraphQLField: IGraphQLField): string;
   begin
-    if LGraphQLField.FieldName = LGraphQLField.FieldAlias then
-      Result := LGraphQLField.FieldName
+    if AGraphQLField.FieldName = AGraphQLField.FieldAlias then
+      Result := AGraphQLField.FieldName
     else
-      Result := Format('%s (%s)', [LGraphQLField.FieldName, LGraphQLField.FieldAlias])
+      Result := Format('%s (%s)', [AGraphQLField.FieldName, AGraphQLField.FieldAlias])
   end;
 
   procedure ShowArguments(LGraphQLField: IGraphQLField; AParentNode: TTreeNode);

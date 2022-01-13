@@ -117,8 +117,9 @@ begin
   LResolver.MapEntity('albums', 'https://jsonplaceholder.typicode.com/albums/{id}');
   LResolver.MapEntity('todos', 'https://jsonplaceholder.typicode.com/todos/{id}');
   LResolver.MapEntity('users', 'https://jsonplaceholder.typicode.com/users/{id}');
-  LResolver.MapEntity('users/posts', 'https://jsonplaceholder.typicode.com/users/{id}/posts');
-  LResolver.MapEntity('users/comments', 'https://jsonplaceholder.typicode.com/users/{id}/comments');
+  LResolver.MapEntity('users/posts', 'https://jsonplaceholder.typicode.com/users/{parentId}/posts');
+  LResolver.MapEntity('users/comments', 'https://jsonplaceholder.typicode.com/users/{parentId}/comments');
+  LResolver.MapEntity('users/todos', 'https://jsonplaceholder.typicode.com/users/{parentId}/todos');
 
   Result := LResolver;
 end;
