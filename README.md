@@ -8,16 +8,24 @@ GraphQL is a query language for your API and a server-side runtime for executing
 
 See more complete documentation at https://graphql.org/.
 
-## Features
 
-* See the GraphQL structure
-* Use simple API (RegisterFunction)
-* Use more complex API (RegisterResolver) 
-* Use API from a ReST server
+## Table of Contents
+
+- [Features](#features)
+  - [GraphQL tree navigation](#graphql-tree-navigation)
+  - [Query your API with GraphQL](#query-your-api-with-graphql)
+    - [Basic API](#basic-api)
+    - [Run methods from a class using RTTI](#run-methods-from-a-class-using-rtti)
+  - [Use API from a ReST server](#use-api-from-a-rest-server)
+- [Todo](#todo)
+
+<!-- /code_chunk_output -->
+
+## Features
 
 ### GraphQL tree navigation
 
-With this release of *GraphQL for Delphi* you can explore the GraphQL query and call your API. 
+The more basic feature of *GraphQL for Delphi* is the possibility to explore the GraphQL query. 
 
 With a code like this you can build the GraphQL tree:
 
@@ -175,7 +183,7 @@ A more complex example:
 ![](https://raw.githubusercontent.com/wiki/lminuti/graphql/GraphQL-complex.gif)
 
 
-#### Use API from a ReST server
+### Use API from a ReST server
 
 If you need to use GraphQL to queries a ReST API you can see the `ProxyDemo`. This simple project creates a basic HTTP server that responds to GraphQL query and uses a remote ReST API (https://jsonplaceholder.typicode.com/) as a data source.
 
