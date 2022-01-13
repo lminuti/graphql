@@ -185,19 +185,64 @@ The project uses a `TGraphQLReSTResolver` to map the GraphQL fields to the ReST 
   FQuery := TGraphQLQuery.Create;
 
   LResolver := TGraphQLReSTResolver.Create;
+
+  // Basic entities
   LResolver.MapEntity('posts', 'https://jsonplaceholder.typicode.com/posts/{id}');
   LResolver.MapEntity('comments', 'https://jsonplaceholder.typicode.com/comments/{id}');
   LResolver.MapEntity('albums', 'https://jsonplaceholder.typicode.com/albums/{id}');
   LResolver.MapEntity('todos', 'https://jsonplaceholder.typicode.com/todos/{id}');
   LResolver.MapEntity('users', 'https://jsonplaceholder.typicode.com/users/{id}');
 
+  // Entity details
+  LResolver.MapEntity('users/posts', 'https://jsonplaceholder.typicode.com/users/{parentId}/posts');
+  LResolver.MapEntity('users/comments', 'https://jsonplaceholder.typicode.com/users/{parentId}/comments');
+  LResolver.MapEntity('users/todos', 'https://jsonplaceholder.typicode.com/users/{parentId}/todos');
+
   FQuery.RegisterResolver(LResolver);
 
 ```
 
+When you define an `entity` you can specify the name of the `id property` (default "id"). The id propery will be used if your entity as a detail. For example you have a resource like:
+
+```url
+https://jsonplaceholder.typicode.com/users/1
+```
+
+```json
+{
+  "userId": 1,
+  "name": "Luca"
+}
+```
+
+and a detail resource like:
+
+```url
+https://jsonplaceholder.typicode.com/users/1/todos
+```
+
+```json
+[{
+  "id": 1,
+  "userId": 1,
+  "title": "Something to do"
+},{
+  "id": 2,
+  "userId": 1,
+  "title": "Another thing to do"
+}]
+```
+
+You must define the entities in this way:
+
+```pascal
+  LResolver.MapEntity('users', 'https://jsonplaceholder.typicode.com/users/{id}', 'userId');
+  LResolver.MapEntity('users/todos', 'https://jsonplaceholder.typicode.com/users/{parentId}/todos');
+```
+
 Then, when you run the query with `FQuery.Run(...)`, the resolver can call the right ReST API.
 
-![](https://raw.githubusercontent.com/wiki/lminuti/graphql/demo3.png)
+![](https://raw.githubusercontent.com/wiki/lminuti/graphql/demo4.png)
 
 ## Todo
 
