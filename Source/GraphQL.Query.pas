@@ -45,7 +45,8 @@ type
     FSerializerFunc: TGraphQLSerializerFunc;
     function Serialize(AValue: TValue; AField: IGraphQLField): string;
     function SerializeObject(AObject: TObject; AGraphQLObject: IGraphQLObject): string;
-    function Resolve(AParams: TGraphQLParams): TValue;
+    function Resolve(AParams: TGraphQLParams): TValue; overload;
+    function Resolve(AField: IGraphQLField): TValue; overload;
   public
     procedure RegisterFunction(const AFunctionName: string; AFunc: TGraphQLFunc);
     procedure RegisterResolver(AResolver: IGraphQLResolver);
@@ -103,6 +104,28 @@ begin
   FSerializerFunc := AFunc;
 end;
 
+function TGraphQLQuery.Resolve(AField: IGraphQLField): TValue;
+var
+  LArgument: IGraphQLArgument;
+  LArgumentIndex: Integer;
+  LParams: TGraphQLParams;
+  LParamDictionary: TDictionary<string, TValue>;
+begin
+  LParamDictionary := TDictionary<string, TValue>.Create;
+  try
+    for LArgumentIndex := 0 to AField.ArgumentCount - 1 do
+    begin
+      LArgument := AField.Arguments[LArgumentIndex];
+      LParamDictionary.Add(LArgument.Name, LArgument.Value);
+    end;
+
+    LParams := TGraphQLParams.Create(AField.FieldName, LParamDictionary);
+    Result := Resolve(LParams);
+  finally
+    LParamDictionary.Free;
+  end;
+end;
+
 function TGraphQLQuery.Resolve(AParams: TGraphQLParams): TValue;
 var
   LFunc: TGraphQLFunc;
@@ -125,34 +148,19 @@ end;
 function TGraphQLQuery.Run(AGraphQL: IGraphQL): string;
 var
   LFieldIndex: Integer;
-  LArgumentIndex: Integer;
   LField: IGraphQLField;
-  LArgument: IGraphQLArgument;
-  LParams: TGraphQLParams;
-  LParamDictionary: TDictionary<string, TValue>;
 begin
   Result := '';
   for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
   begin
     LField := AGraphQL.Fields[LFieldIndex];
 
-    LParamDictionary := TDictionary<string, TValue>.Create;
-    try
-      for LArgumentIndex := 0 to LField.ArgumentCount - 1 do
-      begin
-        LArgument := LField.Arguments[LArgumentIndex];
-        LParamDictionary.Add(LArgument.Name, LArgument.Value);
-      end;
-
-      if Result <> '' then
-      begin
-        Result := Result + ',' + sLineBreak;
-      end;
-      LParams := TGraphQLParams.Create(LField.FieldName, LParamDictionary);
-      Result := Result + '  "' + LField.FieldAlias + '": ' + Serialize(Resolve(LParams), LField);
-    finally
-      LParamDictionary.Free;
+    if Result <> '' then
+    begin
+      Result := Result + ',' + sLineBreak;
     end;
+    Result := Result + '  "' + LField.FieldAlias + '": ' + Serialize(Resolve(LField), LField);
+
   end;
   Result := '{' + sLineBreak + Result + sLineBreak + '}';
 end;
@@ -243,39 +251,29 @@ function TGraphQLQuery.SerializeObject(AObject: TObject; AGraphQLObject: IGraphQ
   function CloneObject(LJSONObject: TJSONObject; AGraphQLObject: IGraphQLObject): TJSONObject;
   var
     LClonedObject: TJSONObject;
-    LJSONPair: TJSONPair;
     LField: IGraphQLField;
     LValue: TJSONValue;
-    LFieldName: string;
-    LFieldAlias: string;
-    LFieldValue: IGraphQLValue;
+    LClonedValue: TJSONValue;
+    LFieldIndex: Integer;
   begin
-    LClonedObject := TJSONObject.Create;
-    for LJSONPair in LJSONObject do
-    begin
-      LField := nil;
-      LFieldName := LJSONPair.JsonString.Value;
-      LFieldAlias := '';
-      if Assigned(AGraphQLObject) then
-      begin
-        LField := AGraphQLObject.FindFieldByName(LFieldName);
-        if Assigned(LField) then
-        begin
-          LFieldAlias := LField.FieldAlias;
-          LFieldValue := LField.Value;
-        end
-      end
-      else
-      begin
-        LFieldAlias := LFieldName;
-        LFieldValue := nil;
-      end;
+    if not Assigned(AGraphQLObject) then
+      Exit(nil);
 
-      if LFieldAlias <> '' then
+    LClonedObject := TJSONObject.Create;
+
+    for LFieldIndex := 0 to AGraphQLObject.FieldCount - 1 do
+    begin
+      LField := AGraphQLObject.Fields[LFieldIndex];
+      LValue := LJSONObject.Values[LField.FieldName];
+
+//      if not Assigned(LValue) then
+//        LValue := Resolve(LField);
+
+      if Assigned(LValue) then
       begin
-        LValue := CloneValue(LJSONPair.JsonValue, LFieldValue);
-        if Assigned(LValue) then
-          LClonedObject.AddPair(LFieldAlias, LValue);
+        LClonedValue := CloneValue(LValue, LField.Value);
+        if Assigned(LClonedValue) then
+          LClonedObject.AddPair(LField.FieldAlias, LClonedValue);
       end;
     end;
     Result := LClonedObject;

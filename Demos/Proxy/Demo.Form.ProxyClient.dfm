@@ -79,11 +79,15 @@ object MainProxyForm: TMainProxyForm
     Font.Style = []
     Lines.Strings = (
       '{'
+      '  test'
       '  users(id:1) {'
       '    id'
       '    name'
       '    address {'
       '      city'
+      '    }'
+      '    todos {'
+      '      title'
       '    }'
       '  }'
       '  todos(userId:1,completed:true) {'
@@ -105,7 +109,6 @@ object MainProxyForm: TMainProxyForm
     Caption = 'Run GraphQL query (F5)'
     TabOrder = 1
     OnClick = RunQueryButtonClick
-    ExplicitTop = 464
   end
   object ResultMemo: TMemo
     Left = 459
@@ -167,7 +170,6 @@ object MainProxyForm: TMainProxyForm
     ScrollBars = ssBoth
     TabOrder = 6
     WordWrap = False
-    ExplicitTop = 431
   end
   object IdHTTP1: TIdHTTP
     AllowCookies = True
