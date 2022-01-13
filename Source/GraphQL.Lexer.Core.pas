@@ -46,8 +46,8 @@ type
     RightParenthesis,
     LeftSquareBracket,
     RightSquareBracket,
-    LeftCurleyBracket,
-    RightCurleyBracket,
+    LeftCurlyBracket,
+    RightCurlyBracket,
     Comma,
     Ellipsis,
     Variable,
@@ -56,10 +56,10 @@ type
     KeywordTrue,
     Equivalence,
     NotEqual,
-    LessThen,
-    LessThenOrEqual,
-    MoreThen,
-    MoreThenOrEqual,
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
     IdentifierNot,
     BinaryAnd,
     LogicalAnd,
@@ -171,8 +171,8 @@ const
     'RightParenthesis',    //  RightParenthesis,
     'LeftSquareBracket',   //  LeftSquareBracket,
     'RightSquareBracket',  //  RightSquareBracket,
-    'LeftCurleyBracket',   //  LeftCurleyBracket,
-    'RightCurleyBracket',  //  RightCurleyBracket,
+    'LeftCurlyBracket',    //  LeftCurlyBracket,
+    'RightCurlyBracket',   //  RightCurlyBracket,
     'Comma',               //  Comma,
     'Ellipsis',            //  Ellipsis,
     'Variable',            //  Variable,
@@ -181,10 +181,10 @@ const
     'KeywordTrue',         //  KeywordTrue,
     'Equivalence',         //  Equivalence,
     'NotEqual',            //  NotEqual,
-    'LessThen',            //  LessThen,
-    'LessThenOrEqual',     //  LessThenOrEqual,
-    'MoreThen',            //  MoreThen,
-    'MoreThenOrEqual',     //  MoreThenOrEqual,
+    'LessThan',            //  LessThan,
+    'LessThanOrEqual',     //  LessThanOrEqual,
+    'GreaterThan',         //  GreaterThan,
+    'GreaterThanOrEqual',  //  GreaterThanOrEqual,
     'Not',                 //  IdentifierNot,
     'BinaryAnd',           //  BinaryAnd,
     'LogicalAnd',          //  LogicalAnd,
@@ -215,8 +215,8 @@ const
     varUnknown,           //  RightParenthesis,
     varUnknown,           //  LeftSquareBracket,
     varUnknown,           //  RightSquareBracket,
-    varUnknown,           //  LeftCurleyBracket,
-    varUnknown,           //  RightCurleyBracket,
+    varUnknown,           //  LeftCurlyBracket,
+    varUnknown,           //  RightCurlyBracket,
     varUnknown,           //  Comma,
     varUnknown,           //  Ellipsis,
     varUString,           //  Variable,
@@ -225,10 +225,10 @@ const
     varUString,           //  KeywordTrue,
     varUnknown,           //  Equivalence,
     varUnknown,           //  NotEqual,
-    varUnknown,           //  LessThen,
-    varUnknown,           //  LessThenOrEqual,
-    varUnknown,           //  MoreThen,
-    varUnknown,           //  MoreThenOrEqual,
+    varUnknown,           //  LessThan,
+    varUnknown,           //  LessThanOrEqual,
+    varUnknown,           //  GreaterThan,
+    varUnknown,           //  GreaterThanOrEqual,
     varUnknown,           //  IdentifierNot,
     varUnknown,           //  BinaryAnd,
     varUnknown,           //  LogicalAnd,
@@ -487,21 +487,21 @@ begin
     begin
       if FBufferReader.ReadNextChar = '=' then
       begin
-        Result.Kind := TTokenKind.MoreThenOrEqual;
+        Result.Kind := TTokenKind.GreaterThanOrEqual;
         FCurrentChar := FBufferReader.ReadChar;
       end
       else
-        Result.Kind := TTokenKind.MoreThen;
+        Result.Kind := TTokenKind.GreaterThan;
     end;
     '<':
     begin
       if FBufferReader.ReadNextChar = '=' then
       begin
-        Result.Kind := TTokenKind.LessThenOrEqual;
+        Result.Kind := TTokenKind.LessThanOrEqual;
         FCurrentChar := FBufferReader.ReadChar;
       end
       else
-        Result.Kind := TTokenKind.LessThen;
+        Result.Kind := TTokenKind.LessThan;
     end;
     '!':
     begin
@@ -534,8 +534,8 @@ begin
     ')': Result.Kind := TTokenKind.RightParenthesis;
     '[': Result.Kind := TTokenKind.LeftSquareBracket;
     ']': Result.Kind := TTokenKind.RightSquareBracket;
-    '{': Result.Kind := TTokenKind.LeftCurleyBracket;
-    '}': Result.Kind := TTokenKind.RightCurleyBracket;
+    '{': Result.Kind := TTokenKind.LeftCurlyBracket;
+    '}': Result.Kind := TTokenKind.RightCurlyBracket;
     ',': Result.Kind := TTokenKind.Comma;
     else
       raise EScannerError.Create(Format('Invalid symbol "%s"', [FCurrentChar]), FBufferReader.LineNumber, FBufferReader.ColumnNumber);
