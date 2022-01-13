@@ -188,8 +188,11 @@ begin
       else
         LGraphQLObject := nil;
 
-      Result := ObjectToJSON(AValue.AsObject, LGraphQLObject);
-      AValue.AsObject.Free;
+      try
+        Result := ObjectToJSON(AValue.AsObject, LGraphQLObject);
+      finally
+        AValue.AsObject.Free;
+      end;
     end;
     tkFloat: Result := TJSONNumber.Create(AValue.AsExtended);
     tkInt64: Result := TJSONNumber.Create(AValue.AsInt64);

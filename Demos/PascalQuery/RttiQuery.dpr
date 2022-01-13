@@ -1,7 +1,6 @@
 program RttiQuery;
 
 uses
-  FastMM4,
   Vcl.Forms,
   Demo.Form.RttiQuery in 'Demo.Form.RttiQuery.pas' {RttiQueryForm},
   Demo.API.Test in 'Demo.API.Test.pas',
