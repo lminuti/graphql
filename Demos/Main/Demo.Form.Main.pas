@@ -27,7 +27,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.IOUtils, System.Types, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  GraphQL.Core, GraphQL.Lexer.Core, GraphQL.SyntaxAnalysis.Builder, Vcl.ExtCtrls;
+  GraphQL.Core, GraphQL.Lexer.Core, GraphQL.SyntaxAnalysis.Builder, Vcl.ExtCtrls,
+  Vcl.Imaging.pngimage;
 
 type
   TMainForm = class(TForm)
@@ -40,6 +41,7 @@ type
     Panel1: TPanel;
     Label2: TLabel;
     Label3: TLabel;
+    Image1: TImage;
     procedure FormCreate(Sender: TObject);
     procedure TreeBuilderButtonClick(Sender: TObject);
     procedure FilesComboBoxChange(Sender: TObject);
