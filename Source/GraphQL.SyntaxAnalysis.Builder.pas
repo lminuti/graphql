@@ -30,6 +30,8 @@ uses
 type
   TGraphQLBuilder = class(TSyntaxAnalysis)
   private
+    FOwnsScanner: Boolean;
+
     { Rules }
     function ArgumentStamement: IGraphQLArgument;
     procedure ArgumentsStatement(AArguments: IGraphQLArguments);
@@ -39,6 +41,8 @@ type
     procedure GraphQL(AGraphQL: IGraphQL);
   public
     function Build: IGraphQL;
+    constructor Create(const ASourceCode :string); reintroduce;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -99,6 +103,19 @@ begin
   inherited;
   Result := TGraphQL.Create;
   GraphQL(Result);
+end;
+
+constructor TGraphQLBuilder.Create(const ASourceCode: string);
+begin
+  inherited Create(TScanner.CreateFromString(ASourceCode));
+  FOwnsScanner := True;
+end;
+
+destructor TGraphQLBuilder.Destroy;
+begin
+  if FOwnsScanner then
+    FScanner.Free;
+  inherited;
 end;
 
 // field = [alias ':' ] fieldname [ arguments ] [object]

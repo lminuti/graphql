@@ -102,7 +102,6 @@
         <DCCReference Include="..\..\Source\GraphQL.Core.pas"/>
         <DCCReference Include="..\..\Source\GraphQL.Lexer.Core.pas"/>
         <DCCReference Include="..\..\Source\GraphQL.SyntaxAnalysis.Builder.pas"/>
-        <DCCReference Include="..\..\Source\GraphQL.SyntaxAnalysis.Checker.pas"/>
         <DCCReference Include="..\..\Source\GraphQL.SyntaxAnalysis.Core.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

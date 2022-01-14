@@ -341,22 +341,16 @@ end;
 
 function TGraphQLQuery.Run(const AQuery: string): string;
 var
-  LScanner: TScanner;
   LBuilder: TGraphQLBuilder;
   LGraphQL: IGraphQL;
 begin
   inherited;
-  LScanner := TScanner.CreateFromString(AQuery);
+  LBuilder := TGraphQLBuilder.Create(AQuery);
   try
-    LBuilder := TGraphQLBuilder.Create(LScanner);
-    try
-      LGraphQL := LBuilder.Build;
-      Result := Run(LGraphQL);
-    finally
-      LBuilder.Free;
-    end;
+    LGraphQL := LBuilder.Build;
+    Result := Run(LGraphQL);
   finally
-    LScanner.Free;
+    LBuilder.Free;
   end;
 end;
 

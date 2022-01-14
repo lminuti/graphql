@@ -38,9 +38,12 @@ type
     constructor Create(const AMessage: string; ALine, ACol: Integer);
   end;
 
+  TReadTokenEvent = procedure (ASender: TObject; AToken: TToken) of object;
+
   TSyntaxAnalysis = class(TObject)
   private
     FTokenQueue: TQueue<TToken>;
+    FOnReadToken: TReadTokenEvent;
   protected
     FScanner: TScanner;
     FToken: TToken;
@@ -48,6 +51,8 @@ type
     procedure NextToken; virtual;
     function Lookahead: TToken; virtual;
   public
+    property OnReadToken: TReadTokenEvent read FOnReadToken write FOnReadToken;
+
     constructor Create(AScanner: TScanner); virtual;
     destructor Destroy; override;
   end;
@@ -75,11 +80,12 @@ end;
 procedure TSyntaxAnalysis.NextToken;
 begin
   if FTokenQueue.Count > 0 then
-  begin
-    FToken := FTokenQueue.Dequeue;
-    Exit;
-  end;
-  FToken := FScanner.NextToken;
+    FToken := FTokenQueue.Dequeue
+  else
+    FToken := FScanner.NextToken;
+
+  if Assigned(FOnReadToken) then
+    FOnReadToken(Self, FToken);
 end;
 
 function TSyntaxAnalysis.Lookahead: TToken;

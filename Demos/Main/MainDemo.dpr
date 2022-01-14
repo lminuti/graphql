@@ -7,7 +7,6 @@ uses
   GraphQL.Core in '..\..\Source\GraphQL.Core.pas',
   GraphQL.Lexer.Core in '..\..\Source\GraphQL.Lexer.Core.pas',
   GraphQL.SyntaxAnalysis.Builder in '..\..\Source\GraphQL.SyntaxAnalysis.Builder.pas',
-  GraphQL.SyntaxAnalysis.Checker in '..\..\Source\GraphQL.SyntaxAnalysis.Checker.pas',
   GraphQL.SyntaxAnalysis.Core in '..\..\Source\GraphQL.SyntaxAnalysis.Core.pas';
 
 {$R *.res}

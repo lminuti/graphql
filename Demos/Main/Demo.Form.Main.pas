@@ -27,25 +27,26 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.IOUtils, System.Types, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  GraphQL.Core;
+  GraphQL.Core, GraphQL.Lexer.Core, GraphQL.SyntaxAnalysis.Builder, Vcl.ExtCtrls;
 
 type
   TMainForm = class(TForm)
     SourceMemo: TMemo;
     LogMemo: TMemo;
-    RunLexerButton: TButton;
-    SyntaxCheckButton: TButton;
-    btnTreeBuilder: TButton;
+    TreeBuilderButton: TButton;
     SyntaxTreeView: TTreeView;
     FilesComboBox: TComboBox;
     Label1: TLabel;
+    Panel1: TPanel;
+    Label2: TLabel;
+    Label3: TLabel;
     procedure FormCreate(Sender: TObject);
-    procedure btnTreeBuilderClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure TreeBuilderButtonClick(Sender: TObject);
     procedure FilesComboBoxChange(Sender: TObject);
-    procedure SyntaxCheckButtonClick(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FSampleDir: string;
+    procedure HandleReadToken(ASender: TObject; AToken: TToken);
     procedure ShowGraphQL(AGraphQL: IGraphQL);
     procedure ReadFiles;
   public
@@ -58,10 +59,6 @@ var
 implementation
 
 {$R *.dfm}
-
-uses
-  GraphQL.Lexer.Core, GraphQL.SyntaxAnalysis.Checker,
-  GraphQL.SyntaxAnalysis.Builder;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
@@ -81,49 +78,28 @@ begin
     FilesComboBox.Items.Add(ExtractFileName(LFileName));
 end;
 
-procedure TMainForm.btnTreeBuilderClick(Sender: TObject);
+procedure TMainForm.TreeBuilderButtonClick(Sender: TObject);
 var
-  LScanner: TScanner;
   LBuilder: TGraphQLBuilder;
   LGraphQL: IGraphQL;
 begin
   inherited;
-  SyntaxTreeView.Items.Clear;
+  if SourceMemo.Text = '' then
+    Exit;
 
-  LScanner := TScanner.CreateFromString(SourceMemo.Text);
+  SyntaxTreeView.Items.Clear;
+  LogMemo.Clear;
+
+  LBuilder := TGraphQLBuilder.Create(SourceMemo.Text);
   try
-    LBuilder := TGraphQLBuilder.Create(LScanner);
-    try
-      LGraphQL := LBuilder.Build;
-    finally
-      LBuilder.Free;
-    end;
+    LBuilder.OnReadToken := HandleReadToken;
+    LGraphQL := LBuilder.Build;
   finally
-    LScanner.Free;
+    LBuilder.Free;
   end;
 
   ShowGraphQL(LGraphQL);
 
-end;
-
-procedure TMainForm.Button1Click(Sender: TObject);
-var
-  LScanner: TScanner;
-  LToken: TToken;
-begin
-  LogMemo.Clear;
-  LScanner := TScanner.CreateFromString(SourceMemo.Text);
-  try
-    while True do
-    begin
-      LToken := LScanner.NextToken;
-      if LToken.Kind = TTokenKind.EndOfStream then
-        Break;
-      LogMemo.Lines.Add(LToken.ToString);
-    end;
-  finally
-    LScanner.Free;
-  end;
 end;
 
 procedure TMainForm.FilesComboBoxChange(Sender: TObject);
@@ -136,6 +112,18 @@ begin
     if FileExists(LFileName) then
       SourceMemo.Lines.LoadFromFile(LFileName);
   end;
+end;
+
+procedure TMainForm.FormKeyUp(Sender: TObject; var Key: Word; Shift:
+    TShiftState);
+begin
+  if Key = VK_F5 then
+    TreeBuilderButton.Click;
+end;
+
+procedure TMainForm.HandleReadToken(ASender: TObject; AToken: TToken);
+begin
+  LogMemo.Lines.Add(AToken.ToString);
 end;
 
 procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
@@ -204,26 +192,6 @@ begin
 
   LRootNode.Expand(True);
 
-end;
-
-procedure TMainForm.SyntaxCheckButtonClick(Sender: TObject);
-var
-  LScanner: TScanner;
-  LSyntaxChecker: TSyntaxChecker;
-begin
-  inherited;
-  LScanner := TScanner.CreateFromString(SourceMemo.Text);
-  try
-    LSyntaxChecker := TSyntaxChecker.Create(LScanner);
-    try
-      LSyntaxChecker.Execute;
-    finally
-      LSyntaxChecker.Free;
-    end;
-  finally
-    LScanner.Free;
-  end;
-  ShowMessage('Syntax OK');
 end;
 
 end.

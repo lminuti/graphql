@@ -1,7 +1,7 @@
 object MainProxyForm: TMainProxyForm
   Left = 0
   Top = 0
-  Caption = 'MainProxyForm'
+  Caption = 'ReST API Demo'
   ClientHeight = 614
   ClientWidth = 906
   Color = clBtnFace
@@ -19,8 +19,8 @@ object MainProxyForm: TMainProxyForm
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 16
-    Top = 16
+    Left = 480
+    Top = 96
     Width = 402
     Height = 19
     Caption = 'This demo will create a proxy server with a built-in client'
@@ -33,14 +33,14 @@ object MainProxyForm: TMainProxyForm
   end
   object Label2: TLabel
     Left = 10
-    Top = 91
+    Top = 123
     Width = 51
     Height = 13
     Caption = 'Proxy port'
   end
   object lblLink: TLabel
-    Left = 132
-    Top = 49
+    Left = 596
+    Top = 129
     Width = 269
     Height = 19
     Cursor = crHandPoint
@@ -54,8 +54,8 @@ object MainProxyForm: TMainProxyForm
     OnClick = lblLinkClick
   end
   object Label3: TLabel
-    Left = 16
-    Top = 47
+    Left = 480
+    Top = 127
     Width = 110
     Height = 19
     Caption = 'Test data from:'
@@ -131,7 +131,7 @@ object MainProxyForm: TMainProxyForm
   end
   object btnStart: TButton
     Left = 200
-    Top = 82
+    Top = 114
     Width = 89
     Height = 34
     Caption = 'Start'
@@ -140,7 +140,7 @@ object MainProxyForm: TMainProxyForm
   end
   object btnStop: TButton
     Left = 295
-    Top = 82
+    Top = 114
     Width = 89
     Height = 34
     Caption = 'Stop'
@@ -149,7 +149,7 @@ object MainProxyForm: TMainProxyForm
   end
   object edtPort: TEdit
     Left = 73
-    Top = 88
+    Top = 120
     Width = 121
     Height = 21
     NumbersOnly = True
@@ -172,6 +172,47 @@ object MainProxyForm: TMainProxyForm
     ScrollBars = ssBoth
     TabOrder = 6
     WordWrap = False
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 906
+    Height = 52
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = 'Panel1'
+    Color = clWhite
+    ParentBackground = False
+    ShowCaption = False
+    TabOrder = 7
+    ExplicitLeft = -6
+    ExplicitWidth = 911
+    object Label4: TLabel
+      Left = 8
+      Top = 4
+      Width = 156
+      Height = 25
+      Caption = 'Graph for Delphi'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -21
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label5: TLabel
+      Left = 8
+      Top = 31
+      Width = 91
+      Height = 16
+      Caption = 'ReST API Demo'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
   end
   object IdHTTP1: TIdHTTP
     AllowCookies = True

@@ -23,6 +23,14 @@ See more complete documentation at https://graphql.org/.
 
 ## Features
 
+*GraphQL for Delphi* supports only a basic part of the [GraphQL specifications](https://spec.graphql.org/draft/):
+
+* Fields
+* Arguments
+* Aliases
+
+Other parts like *variables*, *schema* and *validation* are under development.
+
 ### GraphQL tree navigation
 
 The more basic feature of *GraphQL for Delphi* is the possibility to explore the GraphQL query. 
@@ -30,17 +38,12 @@ The more basic feature of *GraphQL for Delphi* is the possibility to explore the
 With a code like this you can build the GraphQL tree:
 
 ```pascal
-  LScanner := TScanner.CreateFromString(SourceMemo.Text);
+  LBuilder := TGraphQLBuilder.Create(SourceMemo.Text);
   try
-    LBuilder := TGraphQLBuilder.Create(LScanner);
-    try
-      // This will create the tree
-      LGraphQL := LBuilder.Build;
-    finally
-      LBuilder.Free;
-    end;
+    // This will create the tree
+    LGraphQL := LBuilder.Build;
   finally
-    LScanner.Free;
+    LBuilder.Free;
   end;
 ```
 

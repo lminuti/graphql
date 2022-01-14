@@ -27,7 +27,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Rtti, System.Types, System.IOUtils, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, GraphQL.Query,
-  GraphQL.Resolver.Core;
+  GraphQL.Resolver.Core, Vcl.ExtCtrls;
 
 type
   TRttiQueryForm = class(TForm)
@@ -36,6 +36,9 @@ type
     ResultMemo: TMemo;
     Label1: TLabel;
     FilesComboBox: TComboBox;
+    Panel1: TPanel;
+    Label2: TLabel;
+    Label3: TLabel;
     procedure FilesComboBoxChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
