@@ -67,9 +67,6 @@ uses
   REST.Json,
   GraphQL.Lexer.Core, GraphQL.SyntaxAnalysis.Builder, GraphQL.Utils.JSON;
 
-var
-  JSONFormatSettings: TFormatSettings;
-
 constructor TGraphQLQuery.Create;
 begin
   FFunctionRegistry := TGraphQLFunctionRegistry.Create;
@@ -107,16 +104,14 @@ end;
 function TGraphQLQuery.Resolve(AField: IGraphQLField; AParent: TJSONObject): TValue;
 var
   LArgument: IGraphQLArgument;
-  LArgumentIndex: Integer;
   LParams: TGraphQLParams;
   LParamDictionary: TDictionary<string, TValue>;
   LFieldName: string;
 begin
   LParamDictionary := TDictionary<string, TValue>.Create;
   try
-    for LArgumentIndex := 0 to AField.ArgumentCount - 1 do
+    for LArgument in AField.Arguments do
     begin
-      LArgument := AField.Arguments[LArgumentIndex];
       LParamDictionary.Add(LArgument.Name, LArgument.Value);
     end;
 
@@ -153,18 +148,14 @@ end;
 
 function TGraphQLQuery.Run(AGraphQL: IGraphQL): string;
 var
-  LFieldIndex: Integer;
   LField: IGraphQLField;
   LJSONObject: TJSONObject;
 begin
   LJSONObject := TJSONObject.Create;
   try
-    for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
+    for LField in AGraphQL.Fields do
     begin
-      LField := AGraphQL.Fields[LFieldIndex];
-
       LJSONObject.AddPair(LField.FieldAlias, ValueToJSON(Resolve(LField, nil), LField));
-
     end;
     Result := LJSONObject.ToJSON;
   finally
@@ -264,7 +255,6 @@ function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLOb
     LField: IGraphQLField;
     LValue: TJSONValue;
     LClonedValue: TJSONValue;
-    LFieldIndex: Integer;
     LFreeValue: Boolean;
   begin
     if not Assigned(AGraphQLObject) then
@@ -273,10 +263,9 @@ function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLOb
     LClonedObject := TJSONObject.Create;
     try
 
-      for LFieldIndex := 0 to AGraphQLObject.FieldCount - 1 do
+      for LField in AGraphQLObject.Fields do
       begin
         LFreeValue := False;
-        LField := AGraphQLObject.Fields[LFieldIndex];
         LValue := LJSONObject.Values[LField.FieldName];
         try
 
@@ -353,9 +342,5 @@ begin
     LBuilder.Free;
   end;
 end;
-
-initialization
-
-  JSONFormatSettings := TFormatSettings.Invariant;
 
 end.

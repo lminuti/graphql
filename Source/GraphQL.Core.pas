@@ -24,7 +24,7 @@ unit GraphQL.Core;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti;
+  System.Classes, System.SysUtils, System.Rtti, Generics.Collections;
 
 type
   EGraphQLError = class(Exception)
@@ -34,6 +34,14 @@ type
   end;
 
   EGraphQLFieldNotFound = class(EGraphQLError)
+  end;
+
+  IGraphQLList<T> = interface
+    ['{909FA6AE-FD7D-436D-B948-F11F2A5ECBCE}']
+    function Count: Integer;
+    function GetItem(LIndex: Integer): T;
+    function GetEnumerator: TEnumerator<T>;
+    property Items[LIndex: Integer]: T read GetItem; default;
   end;
 
   // abstact
@@ -50,21 +58,12 @@ type
     property Value: TValue read GetValue;
   end;
 
-  IGraphQLArguments = interface
-  ['{9415D410-2BAB-4F06-B8E4-36788036FCBB}']
-    function Count: Integer;
-    function GetArgument(AIndex: Integer): IGraphQLArgument;
-    procedure Add(AArgument: IGraphQLArgument);
-
-    property Arguments[AIndex: Integer]: IGraphQLArgument read GetArgument; default;
-  end;
-
   IGraphQLField = interface
     ['{9C7313F8-7953-4F9E-876B-69B2CDE60865}']
     function GetFieldName: string;
     function GetFieldAlias: string;
     function GetValue: IGraphQLValue;
-    function GetArgument(AIndex: Integer): IGraphQLArgument;
+    function GetArguments: IGraphQLList<IGraphQLArgument>;
     function ArgumentCount: Integer;
     function ArgumentByName(const AName: string): IGraphQLArgument;
     function GetParentField: IGraphQLField;
@@ -73,7 +72,7 @@ type
     property FieldName: string read GetFieldName;
     property FieldAlias: string read GetFieldAlias;
     property Value: IGraphQLValue read GetValue;
-    property Arguments[AIndex: Integer]: IGraphQLArgument read GetArgument;
+    property Arguments: IGraphQLList<IGraphQLArgument> read GetArguments;
   end;
 
   IGraphQLNull = interface(IGraphQLValue)
@@ -83,11 +82,11 @@ type
   IGraphQLObject = interface(IGraphQLValue)
     ['{80B1FD62-50BA-4000-8C3C-79FF8F52159E}']
     function FieldCount: Integer;
-    function GetField(AIndex: Integer): IGraphQLField;
+    function GetFields: IGraphQLList<IGraphQLField>;
     function GetFieldByName(const AName: string): IGraphQLField;
     function FindFieldByName(const AName: string): IGraphQLField;
 
-    property Fields[AIndex: Integer]: IGraphQLField read GetField;
+    property Fields: IGraphQLList<IGraphQLField> read GetFields;
     property FieldByName[const AName: string]: IGraphQLField read GetFieldByName;
   end;
 
@@ -97,9 +96,9 @@ type
     procedure SetName(const AName: string);
     procedure AddField(AField: IGraphQLField);
     function FieldCount: Integer;
-    function GetField(AIndex: Integer): IGraphQLField;
+    function GetFields: IGraphQLList<IGraphQLField>;
 
-    property Fields[AIndex: Integer]: IGraphQLField read GetField;
+    property Fields: IGraphQLList<IGraphQLField> read GetFields;
     property Name: string read GetName write SetName;
   end;
 

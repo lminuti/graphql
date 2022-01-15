@@ -34,7 +34,7 @@ type
 
     { Rules }
     function ArgumentStamement: IGraphQLArgument;
-    procedure ArgumentsStatement(AArguments: IGraphQLArguments);
+    procedure ArgumentsStatement(AArguments: IGraphQLList<IGraphQLArgument>);
     function FieldStatement(AParentField: IGraphQLField): IGraphQLField;
     function ObjectStatement(AParentField: IGraphQLField): IGraphQLObject;
     procedure Query(AGraphQL: IGraphQL);
@@ -50,15 +50,15 @@ implementation
 { TSyntaxAnalysis }
 
 // arguments = '(' argument [ ',' argument [...] ] } '}'
-procedure TGraphQLBuilder.ArgumentsStatement(AArguments: IGraphQLArguments);
+procedure TGraphQLBuilder.ArgumentsStatement(AArguments: IGraphQLList<IGraphQLArgument>);
 begin
   Expect(TTokenKind.LeftParenthesis);
 
-  AArguments.Add(ArgumentStamement);
+  (AArguments as IEditableList<IGraphQLArgument>).Add(ArgumentStamement);
   while FToken.Kind = TTokenKind.Comma do
   begin
     NextToken;
-    AArguments.Add(ArgumentStamement);
+    (AArguments as IEditableList<IGraphQLArgument>).Add(ArgumentStamement);
   end;
 
   Expect(TTokenKind.RightParenthesis);
@@ -124,7 +124,7 @@ var
   LFieldName: string;
   LFieldAlias: string;
   LValue: IGraphQLValue;
-  LArguments: IGraphQLArguments;
+  LArguments: IGraphQLList<IGraphQLArgument>;
   LGraphQLField: TGraphQLField;
 begin
   Expect(TTokenKind.Identifier, False);
@@ -141,7 +141,7 @@ begin
     NextToken;
   end;
 
-  LArguments := TGraphQLArguments.Create;
+  LArguments := TInterfacedList<IGraphQLArgument>.Create;
   if FToken.Kind = TTokenKind.LeftParenthesis then
     ArgumentsStatement(LArguments);
 

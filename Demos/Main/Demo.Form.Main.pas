@@ -141,15 +141,13 @@ procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
   procedure ShowArguments(LGraphQLField: IGraphQLField; AParentNode: TTreeNode);
   var
     LArgumentsNode: TTreeNode;
-    LArgumentIndex: Integer;
     LGraphQLArgument: IGraphQLArgument;
   begin
     if LGraphQLField.ArgumentCount > 0 then
     begin
       LArgumentsNode := SyntaxTreeView.Items.AddChild(AParentNode, 'Arguments');
-      for LArgumentIndex := 0 to LGraphQLField.ArgumentCount - 1 do
+      for LGraphQLArgument in LGraphQLField.Arguments do
       begin
-        LGraphQLArgument := LGraphQLField.Arguments[LArgumentIndex];
         SyntaxTreeView.Items.AddChild(LArgumentsNode, Format('%s : %s', [LGraphQLArgument.Name, LGraphQLArgument.Value.ToString]));
       end;
     end;
@@ -158,12 +156,10 @@ procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
   procedure ShowObject(AGraphQLObject: IGraphQLObject; AParentNode: TTreeNode);
   var
     LSubNode: TTreeNode;
-    LFieldIndex: Integer;
     LGraphQLField: IGraphQLField;
   begin
-    for LFieldIndex := 0 to AGraphQLObject.FieldCount - 1 do
+    for LGraphQLField in AGraphQLObject.Fields do
     begin
-      LGraphQLField := AGraphQLObject.Fields[LFieldIndex];
       LSubNode := SyntaxTreeView.Items.AddChild(AParentNode, GetFieldNameCaption(LGraphQLField));
       ShowArguments(LGraphQLField, LSubNode);
       if Supports(LGraphQLField.Value, IGraphQLObject) then
@@ -175,14 +171,12 @@ procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
 
 var
   LRootNode, LSubNode: TTreeNode;
-  LFieldIndex: Integer;
   LGraphQLField: IGraphQLField;
 begin
   LRootNode := SyntaxTreeView.Items.AddChildFirst(nil, AGraphQL.Name + ' (query)');
 
-  for LFieldIndex := 0 to AGraphQL.FieldCount - 1 do
+  for LGraphQLField in AGraphQL.Fields do
   begin
-    LGraphQLField := AGraphQL.Fields[LFieldIndex];
     LSubNode := SyntaxTreeView.Items.AddChild(LRootNode, GetFieldNameCaption(LGraphQLField));
     ShowArguments(LGraphQLField, LSubNode);
     if Supports(LGraphQLField.Value, IGraphQLObject) then

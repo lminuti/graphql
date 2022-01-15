@@ -11,13 +11,12 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   OnCreate = FormCreate
   OnKeyUp = FormKeyUp
+  PixelsPerInch = 96
   DesignSize = (
     911
     588)
-  PixelsPerInch = 96
   TextHeight = 16
   object Label1: TLabel
     Left = 8
@@ -58,7 +57,6 @@ object MainForm: TMainForm
     ScrollBars = ssBoth
     TabOrder = 1
     WordWrap = False
-    ExplicitTop = 327
   end
   object TreeBuilderButton: TButton
     Left = 8
