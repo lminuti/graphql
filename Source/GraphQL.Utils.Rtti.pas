@@ -115,8 +115,7 @@ implementation
 
 uses
   Generics.Collections,
-  System.DateUtils,
-  WiRL.Core.Utils;
+  System.DateUtils;
 
 { TRttiHelper }
 
