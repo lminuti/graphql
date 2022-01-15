@@ -11,13 +11,12 @@ object RttiQueryForm: TRttiQueryForm
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   OnCreate = FormCreate
   OnKeyUp = FormKeyUp
+  PixelsPerInch = 96
   DesignSize = (
     905
     450)
-  PixelsPerInch = 96
   TextHeight = 16
   object Label1: TLabel
     Left = 8
@@ -48,7 +47,7 @@ object RttiQueryForm: TRttiQueryForm
     Width = 193
     Height = 47
     Anchors = [akLeft, akBottom]
-    Caption = 'Execute GrapgQL query (F5)'
+    Caption = 'Execute GraphQL query (F5)'
     TabOrder = 1
     OnClick = RunQueryButtonClick
   end
@@ -89,14 +88,12 @@ object RttiQueryForm: TRttiQueryForm
     ParentBackground = False
     ShowCaption = False
     TabOrder = 4
-    ExplicitLeft = -6
-    ExplicitWidth = 911
     object Label2: TLabel
       Left = 59
       Top = 3
-      Width = 156
+      Width = 181
       Height = 25
-      Caption = 'Graph for Delphi'
+      Caption = 'GraphQL for Delphi'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = 9961697
       Font.Height = -21

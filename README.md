@@ -8,7 +8,6 @@ GraphQL is a query language for your API and a server-side runtime for executing
 
 See more complete documentation at https://graphql.org/.
 
-
 ## Table of Contents
 
 - [Features](#features)

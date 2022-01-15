@@ -256,9 +256,9 @@ object MainProxyForm: TMainProxyForm
     object Label4: TLabel
       Left = 59
       Top = 3
-      Width = 156
+      Width = 181
       Height = 25
-      Caption = 'Graph for Delphi'
+      Caption = 'GraphQL for Delphi'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = 9961697
       Font.Height = -21

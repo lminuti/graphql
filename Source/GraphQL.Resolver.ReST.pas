@@ -24,7 +24,7 @@ unit GraphQL.Resolver.ReST;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.JSON, System.NetEncoding, Generics.Collections,
+  System.Classes, System.SysUtils, System.Rtti, System.TypInfo, System.JSON, System.NetEncoding, Generics.Collections,
   GraphQL.Core, GraphQL.Resolver.Core, IdHttp, System.RegularExpressions;
 
 type
