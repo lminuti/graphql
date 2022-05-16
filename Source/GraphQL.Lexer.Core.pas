@@ -64,7 +64,8 @@ type
     BinaryAnd,
     LogicalAnd,
     BinaryOr,
-    LogicalOr
+    LogicalOr,
+    Dollar
   );
   {$SCOPEDENUMS OFF}
 
@@ -189,7 +190,8 @@ const
     'BinaryAnd',           //  BinaryAnd,
     'LogicalAnd',          //  LogicalAnd,
     'BinaryOr',            //  BinaryOr,
-    'LogicalOr'            //  LogicalOr
+    'LogicalOr',           //  LogicalOr
+    'Dollar'               //  Dollar
   );
 begin
   Result := KindStr[Kind];
@@ -233,7 +235,8 @@ const
     varUnknown,           //  BinaryAnd,
     varUnknown,           //  LogicalAnd,
     varUnknown,           //  BinaryOr,
-    varUnknown            //  LogicalOr
+    varUnknown,           //  LogicalOr
+    varUnknown            //  Dollar
   );
 begin
   Result := KindType[Kind];
@@ -537,6 +540,7 @@ begin
     '{': Result.Kind := TTokenKind.LeftCurlyBracket;
     '}': Result.Kind := TTokenKind.RightCurlyBracket;
     ',': Result.Kind := TTokenKind.Comma;
+    '$': Result.Kind := TTokenKind.Dollar;
     else
       raise EScannerError.Create(Format('Invalid symbol "%s"', [FCurrentChar]), FBufferReader.LineNumber, FBufferReader.ColumnNumber);
   end;
@@ -748,7 +752,7 @@ end;
 
 function TToken.IsIdentifier(const Value: string): Boolean;
 begin
-  Result := False;
+  Result := True;
   if Kind <> TTokenKind.Identifier then
     Exit(False);
 

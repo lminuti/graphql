@@ -36,6 +36,21 @@ type
   EGraphQLFieldNotFound = class(EGraphQLError)
   end;
 
+  {$SCOPEDENUMS ON}
+  TGraphQLVariableType = (
+    UnknownType,
+    StringType,
+    IntType,
+    FloatType,
+    BooleanType,
+    IdType
+  );
+
+  TGraphQLArgumentAttribute = (Variable);
+
+  TGraphQLArgumentAttributes = set of TGraphQLArgumentAttribute;
+  {$SCOPEDENUMS OFF}
+
   IGraphQLList<T> = interface
     ['{909FA6AE-FD7D-436D-B948-F11F2A5ECBCE}']
     function Count: Integer;
@@ -53,9 +68,13 @@ type
     ['{9740320C-AC4E-47F4-BAA1-8C9EB7D7BEAB}']
     function GetName: string;
     function GetValue: TValue;
+    function GetArgumentType: TGraphQLVariableType;
+    function GetAttributes: TGraphQLArgumentAttributes;
 
     property Name: string read GetName;
+    property ArgumentType: TGraphQLVariableType read GetArgumentType;
     property Value: TValue read GetValue;
+    property Attributes: TGraphQLArgumentAttributes read GetAttributes;
   end;
 
   IGraphQLField = interface
@@ -90,18 +109,53 @@ type
     property FieldByName[const AName: string]: IGraphQLField read GetFieldByName;
   end;
 
+  IGraphQLParam = interface
+    ['{0A306CB8-F0C9-4F93-B237-2993C6370ADF}']
+    function GetParamName: string;
+    procedure SetParamName(const LValue: string);
+    function GetParamType: TGraphQLVariableType;
+    procedure SetParamType(LValue: TGraphQLVariableType);
+    function GetRequired: Boolean;
+    procedure SetRequired(LValue: Boolean);
+
+    property ParamName: string read GetParamName write SetParamName;
+    property ParamType: TGraphQLVariableType read GetParamType write SetParamType;
+    property Required: Boolean read GetRequired write SetRequired;
+  end;
+
   IGraphQL = interface
     ['{68BCD39F-A645-4007-8FA3-632359041A68}']
     function GetName: string;
     procedure SetName(const AName: string);
     procedure AddField(AField: IGraphQLField);
     function FieldCount: Integer;
+
     function GetFields: IGraphQLList<IGraphQLField>;
+    function GetParams: IGraphQLList<IGraphQLParam>;
+    procedure AddParam(AParam: IGraphQLParam);
+    function ParamCount: Integer;
 
     property Fields: IGraphQLList<IGraphQLField> read GetFields;
+    property Params: IGraphQLList<IGraphQLParam> read GetParams;
     property Name: string read GetName write SetName;
   end;
 
+function VariableTypeToStr(AParamType: TGraphQLVariableType): string;
+
 implementation
+
+function VariableTypeToStr(AParamType: TGraphQLVariableType): string;
+const
+  LTypeStr: array [TGraphQLVariableType] of string = (
+    'Unknown',
+    'String',
+    'Int',
+    'Float',
+    'Boolean',
+    'ID'
+  );
+begin
+  Result := LTypeStr[AParamType];
+end;
 
 end.

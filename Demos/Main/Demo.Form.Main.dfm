@@ -11,12 +11,13 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
+  OldCreateOrder = True
   OnCreate = FormCreate
   OnKeyUp = FormKeyUp
-  PixelsPerInch = 96
   DesignSize = (
     911
     588)
+  PixelsPerInch = 96
   TextHeight = 16
   object Label1: TLabel
     Left = 8
@@ -67,7 +68,6 @@ object MainForm: TMainForm
     Caption = 'Build syntax tree (F5)'
     TabOrder = 2
     OnClick = TreeBuilderButtonClick
-    ExplicitTop = 287
   end
   object SyntaxTreeView: TTreeView
     Left = 458

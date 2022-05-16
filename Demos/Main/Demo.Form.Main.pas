@@ -142,13 +142,18 @@ procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
   var
     LArgumentsNode: TTreeNode;
     LGraphQLArgument: IGraphQLArgument;
+    LArgumentInfo: string;
   begin
     if LGraphQLField.ArgumentCount > 0 then
     begin
       LArgumentsNode := SyntaxTreeView.Items.AddChild(AParentNode, 'Arguments');
       for LGraphQLArgument in LGraphQLField.Arguments do
       begin
-        SyntaxTreeView.Items.AddChild(LArgumentsNode, Format('%s : %s', [LGraphQLArgument.Name, LGraphQLArgument.Value.ToString]));
+        if TGraphQLArgumentAttribute.Variable in LGraphQLArgument.Attributes then
+          LArgumentInfo := 'Variable'
+        else
+          LArgumentInfo := VariableTypeToStr(LGraphQLArgument.ArgumentType);
+        SyntaxTreeView.Items.AddChild(LArgumentsNode, Format('%s : %s (%s)', [LGraphQLArgument.Name, LGraphQLArgument.Value.ToString, LArgumentInfo]));
       end;
     end;
   end;
@@ -172,8 +177,22 @@ procedure TMainForm.ShowGraphQL(AGraphQL: IGraphQL);
 var
   LRootNode, LSubNode: TTreeNode;
   LGraphQLField: IGraphQLField;
+  LGraphQLParam: IGraphQLParam;
+  LRequiredString: string;
 begin
   LRootNode := SyntaxTreeView.Items.AddChildFirst(nil, AGraphQL.Name + ' (query)');
+
+  if AGraphQL.ParamCount > 0 then
+  begin
+    LSubNode := SyntaxTreeView.Items.AddChild(LRootNode, 'Parameters');
+    for LGraphQLParam in AGraphQL.Params do
+    begin
+      LRequiredString := '';
+      if LGraphQLParam.Required then
+        LRequiredString := ' (required)';
+      SyntaxTreeView.Items.AddChild(LSubNode, LGraphQLParam.ParamName + ':' + VariableTypeToStr(LGraphQLParam.ParamType) + LRequiredString);
+    end;
+  end;
 
   for LGraphQLField in AGraphQL.Fields do
   begin

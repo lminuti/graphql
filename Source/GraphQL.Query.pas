@@ -38,22 +38,34 @@ type
   TGraphQLResolverRegistry = class(TList<IGraphQLResolver>)
   end;
 
+  TOnNeedVariableEvent = procedure (Sender: TObject; AArgument: IGraphQLArgument; var AValue: TValue) of object;
+  TOnFreeObjectEvent = procedure (Sender: TObject; AObjectToFree: TObject; var AAutoFree: Boolean) of object;
+
   TGraphQLQuery = class(TObject)
   private
     FFunctionRegistry: TGraphQLFunctionRegistry;
     FResolverRegistry: TGraphQLResolverRegistry;
     FSerializerFunc: TGraphQLSerializerFunc;
-    function Resolve(AParams: TGraphQLParams): TValue; overload;
-    function Resolve(AField: IGraphQLField; AParent: TJSONObject): TValue; overload;
-    function ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject): TJSONValue;
-    function ValueToJSON(AValue: TValue; AField: IGraphQLField): TJSONValue;
+    FOnNeedVariable: TOnNeedVariableEvent;
+    FAutoFree: Boolean;
+    FOnFreeObject: TOnFreeObjectEvent;
+    function GetVariable(LArgument: IGraphQLArgument; AVariables: IGraphQLVariables): TValue;
+    function Resolve(AParams: TGraphQLParams; AVariables: IGraphQLVariables): TValue; overload;
+    function Resolve(AField: IGraphQLField; AParent: TJSONObject; AVariables: IGraphQLVariables): TValue; overload;
+    function ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject; AVariables: IGraphQLVariables): TJSONValue;
+    function ValueToJSON(AValue: TValue; AField: IGraphQLField; AVariables: IGraphQLVariables): TJSONValue;
   public
     procedure RegisterFunction(const AFunctionName: string; AFunc: TGraphQLFunc);
     procedure RegisterResolver(AResolver: IGraphQLResolver);
     procedure RegisterSerializer(AFunc: TGraphQLSerializerFunc);
 
-    function Run(const AQuery: string): string; overload;
-    function Run(AGraphQL: IGraphQL): string; overload;
+    function Parse(const AQuery: string): IGraphQL;
+    function Run(const AQuery: string; AVariables: IGraphQLVariables): string; overload;
+    function Run(AGraphQL: IGraphQL; AVariables: IGraphQLVariables): string; overload;
+
+    property OnNeedVariable: TOnNeedVariableEvent read FOnNeedVariable write FOnNeedVariable;
+    property OnFreeObject: TOnFreeObjectEvent read FOnFreeObject write FOnFreeObject;
+    property AutoFree: Boolean read FAutoFree write FAutoFree default True;
 
     constructor Create;
     destructor Destroy; override;
@@ -69,6 +81,7 @@ uses
 
 constructor TGraphQLQuery.Create;
 begin
+  FAutoFree := True;
   FFunctionRegistry := TGraphQLFunctionRegistry.Create;
   FResolverRegistry := TGraphQLResolverRegistry.Create;
   FSerializerFunc :=
@@ -83,6 +96,22 @@ begin
   FFunctionRegistry.Free;
   FResolverRegistry.Free;
   inherited;
+end;
+
+function TGraphQLQuery.GetVariable(LArgument: IGraphQLArgument; AVariables: IGraphQLVariables): TValue;
+begin
+  if AVariables.VariableExists(LArgument.Name) then
+  begin
+    Exit(AVariables.GetVariable(LArgument.Name));
+  end;
+
+  if Assigned(FOnNeedVariable) then
+  begin
+    FOnNeedVariable(Self, LArgument, Result);
+    Exit;
+  end;
+
+  raise EGraphQLError.CreateFmt('Variable [%s] not found', [LArgument.Name]);
 end;
 
 procedure TGraphQLQuery.RegisterFunction(const AFunctionName: string;
@@ -101,7 +130,7 @@ begin
   FSerializerFunc := AFunc;
 end;
 
-function TGraphQLQuery.Resolve(AField: IGraphQLField; AParent: TJSONObject): TValue;
+function TGraphQLQuery.Resolve(AField: IGraphQLField; AParent: TJSONObject; AVariables: IGraphQLVariables): TValue;
 var
   LArgument: IGraphQLArgument;
   LParams: TGraphQLParams;
@@ -112,7 +141,10 @@ begin
   try
     for LArgument in AField.Arguments do
     begin
-      LParamDictionary.Add(LArgument.Name, LArgument.Value);
+      if TGraphQLArgumentAttribute.Variable in LArgument.Attributes then
+        LParamDictionary.Add(LArgument.Name, GetVariable(LArgument, AVariables))
+      else
+        LParamDictionary.Add(LArgument.Name, LArgument.Value);
     end;
 
     if Assigned(AField.ParentField) then
@@ -121,13 +153,13 @@ begin
       LFieldName := AField.FieldName;
 
     LParams := TGraphQLParams.Create(LFieldName, LParamDictionary, AParent);
-    Result := Resolve(LParams);
+    Result := Resolve(LParams, AVariables);
   finally
     LParamDictionary.Free;
   end;
 end;
 
-function TGraphQLQuery.Resolve(AParams: TGraphQLParams): TValue;
+function TGraphQLQuery.Resolve(AParams: TGraphQLParams; AVariables: IGraphQLVariables): TValue;
 var
   LFunc: TGraphQLFunc;
   LResolver: IGraphQLResolver;
@@ -146,7 +178,7 @@ begin
   raise EGraphQLError.CreateFmt('Entity [%s] not found', [AParams.FieldName]);
 end;
 
-function TGraphQLQuery.Run(AGraphQL: IGraphQL): string;
+function TGraphQLQuery.Run(AGraphQL: IGraphQL; AVariables: IGraphQLVariables): string;
 var
   LField: IGraphQLField;
   LJSONObject: TJSONObject;
@@ -155,7 +187,7 @@ begin
   try
     for LField in AGraphQL.Fields do
     begin
-      LJSONObject.AddPair(LField.FieldAlias, ValueToJSON(Resolve(LField, nil), LField));
+      LJSONObject.AddPair(LField.FieldAlias, ValueToJSON(Resolve(LField, nil, AVariables), LField, AVariables));
     end;
     Result := LJSONObject.ToJSON;
   finally
@@ -163,9 +195,13 @@ begin
   end;
 end;
 
-function TGraphQLQuery.ValueToJSON(AValue: TValue; AField: IGraphQLField): TJSONValue;
+function TGraphQLQuery.ValueToJSON(AValue: TValue; AField: IGraphQLField; AVariables: IGraphQLVariables): TJSONValue;
 var
   LGraphQLObject: IGraphQLObject;
+  LIndex: Integer;
+  LJsonValue: TJSONValue;
+  LJsonArray: TJSONArray;
+  LAutoFree: Boolean;
 begin
   case AValue.Kind of
     tkInteger: Result := TJSONNumber.Create(AValue.AsInteger);
@@ -174,19 +210,37 @@ begin
     tkWString,
     tkUString: Result := TJSONString.Create(AValue.AsString);
     tkClass: begin
+      LAutoFree := FAutoFree;
       if Supports(AField.Value, IGraphQLObject)  then
         LGraphQLObject := AField.Value as IGraphQLObject
       else
         LGraphQLObject := nil;
 
       try
-        Result := ObjectToJSON(AValue.AsObject, LGraphQLObject);
+        Result := ObjectToJSON(AValue.AsObject, LGraphQLObject, AVariables);
       finally
-        AValue.AsObject.Free;
+        if Assigned(FOnFreeObject) then
+          FOnFreeObject(Self, AValue.AsObject, LAutoFree);
+        if LAutoFree then
+          AValue.AsObject.Free;
       end;
     end;
     tkFloat: Result := TJSONNumber.Create(AValue.AsExtended);
     tkInt64: Result := TJSONNumber.Create(AValue.AsInt64);
+    tkDynArray: begin
+      LJsonArray := TJSONArray.Create;
+      try
+        for LIndex := 0 to AValue.GetArrayLength - 1 do
+        begin
+          LJsonValue := ValueToJSON(AValue.GetArrayElement(LIndex), AField, AVariables);
+          LJsonArray.AddElement(LJsonValue);
+        end;
+      except
+        LJsonArray.Free;
+        raise;
+      end;
+      Result := LJsonArray;
+    end;
 //    tkClassRef
 //    tkChar,
 //    tkEnumeration,
@@ -203,7 +257,7 @@ begin
   end;
 end;
 
-function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject): TJSONValue;
+function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject; AVariables: IGraphQLVariables): TJSONValue;
 
   function CloneObject(LJSONObject: TJSONObject; AGraphQLObject: IGraphQLObject): TJSONObject; forward;
 
@@ -271,7 +325,7 @@ function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLOb
 
           if not Assigned(LValue) then
           begin
-            LValue := ValueToJSON(Resolve(LField, LJSONObject), LField);
+            LValue := ValueToJSON(Resolve(LField, LJSONObject, AVariables), LField, AVariables);
             LFreeValue := True;
           end;
 
@@ -328,19 +382,26 @@ begin
   Result := LJSONFilteredObject;
 end;
 
-function TGraphQLQuery.Run(const AQuery: string): string;
+function TGraphQLQuery.Parse(const AQuery: string): IGraphQL;
 var
   LBuilder: TGraphQLBuilder;
-  LGraphQL: IGraphQL;
 begin
   inherited;
   LBuilder := TGraphQLBuilder.Create(AQuery);
   try
-    LGraphQL := LBuilder.Build;
-    Result := Run(LGraphQL);
+    Result := LBuilder.Build;
   finally
     LBuilder.Free;
   end;
+end;
+
+function TGraphQLQuery.Run(const AQuery: string; AVariables: IGraphQLVariables): string;
+var
+  LGraphQL: IGraphQL;
+begin
+  inherited;
+  LGraphQL := Parse(AQuery);
+  Result := Run(LGraphQL, AVariables);
 end;
 
 end.

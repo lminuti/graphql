@@ -50,13 +50,17 @@ type
   TGraphQLArgument = class(TInterfacedObject, IGraphQLArgument)
   private
     FName: string;
+    FArgumentType: TGraphQLVariableType;
+    FAttributes: TGraphQLArgumentAttributes;
     FValue: TValue;
   public
     { IGraphQLArgument }
     function GetName: string;
+    function GetArgumentType: TGraphQLVariableType;
+    function GetAttributes: TGraphQLArgumentAttributes;
     function GetValue: TValue;
 
-    constructor Create(const AName: string; AValue: TValue);
+    constructor Create(const AName: string; AArgumentType: TGraphQLVariableType; AAttributes: TGraphQLArgumentAttributes; AValue: TValue);
   end;
 
   TGraphQLObject = class(TInterfacedObject, IGraphQLObject, IGraphQLValue)
@@ -102,10 +106,28 @@ type
     destructor Destroy; override;
   end;
 
+  TGraphQLParam = class(TInterfacedObject, IGraphQLParam)
+  private
+    FParamName: string;
+    FParamType: TGraphQLVariableType;
+    FRequired: Boolean;
+  public
+    { IGraphQLParam }
+    function GetParamName: string;
+    procedure SetParamName(const LValue: string);
+    function GetParamType: TGraphQLVariableType;
+    procedure SetParamType(LValue: TGraphQLVariableType);
+    function GetRequired: Boolean;
+    procedure SetRequired(LValue: Boolean);
+
+    constructor Create(const AParamName: string; AParamType: TGraphQLVariableType; ARequired: Boolean);
+  end;
+
   TGraphQL = class(TInterfacedObject, IGraphQL)
   private
     FName: string;
     FFields: IGraphQLList<IGraphQLField>;
+    FParams: IGraphQLList<IGraphQLParam>;
   public
     { IGraphQL }
     function GetName: string;
@@ -113,6 +135,10 @@ type
     procedure AddField(AField: IGraphQLField);
     function FieldCount: Integer;
     function GetFields: IGraphQLList<IGraphQLField>;
+
+    function GetParams: IGraphQLList<IGraphQLParam>;
+    procedure AddParam(AParam: IGraphQLParam);
+    function ParamCount: Integer;
 
     constructor Create;
     destructor Destroy; override;
@@ -127,9 +153,15 @@ begin
   (FFields as IEditableList<IGraphQLField>).Add(AField);
 end;
 
+procedure TGraphQL.AddParam(AParam: IGraphQLParam);
+begin
+  (FParams as IEditableList<IGraphQLParam>).Add(AParam);
+end;
+
 constructor TGraphQL.Create;
 begin
   FFields := TInterfacedList<IGraphQLField>.Create();
+  FParams := TInterfacedList<IGraphQLParam>.Create();
 end;
 
 destructor TGraphQL.Destroy;
@@ -151,6 +183,16 @@ end;
 function TGraphQL.GetName: string;
 begin
   Result := FName;
+end;
+
+function TGraphQL.GetParams: IGraphQLList<IGraphQLParam>;
+begin
+  Result := FParams;
+end;
+
+function TGraphQL.ParamCount: Integer;
+begin
+  Result := FParams.Count;
 end;
 
 procedure TGraphQL.SetName(const AName: string);
@@ -272,11 +314,23 @@ end;
 
 { TGraphQLArgument }
 
-constructor TGraphQLArgument.Create(const AName: string; AValue: TValue);
+constructor TGraphQLArgument.Create(const AName: string; AArgumentType: TGraphQLVariableType; AAttributes: TGraphQLArgumentAttributes; AValue: TValue);
 begin
   inherited Create;
   FName := AName;
+  FArgumentType := AArgumentType;
+  FAttributes := AAttributes;
   FValue := AValue;
+end;
+
+function TGraphQLArgument.GetArgumentType: TGraphQLVariableType;
+begin
+  Result := FArgumentType;
+end;
+
+function TGraphQLArgument.GetAttributes: TGraphQLArgumentAttributes;
+begin
+  Result := FAttributes;
 end;
 
 function TGraphQLArgument.GetName: string;
@@ -321,6 +375,47 @@ end;
 function TInterfacedList<T>.GetItem(LIndex: Integer): T;
 begin
   Result := FItems[LIndex];
+end;
+
+{ TGraphQLParam }
+
+constructor TGraphQLParam.Create(const AParamName: string;
+  AParamType: TGraphQLVariableType; ARequired: Boolean);
+begin
+  inherited Create;
+  FParamName := AParamName;
+  FParamType := AParamType;
+  FRequired := ARequired;
+end;
+
+function TGraphQLParam.GetParamName: string;
+begin
+  Result := FParamName;
+end;
+
+function TGraphQLParam.GetParamType: TGraphQLVariableType;
+begin
+  Result := FParamType;
+end;
+
+function TGraphQLParam.GetRequired: Boolean;
+begin
+  Result := FRequired;
+end;
+
+procedure TGraphQLParam.SetParamName(const LValue: string);
+begin
+  FParamName := LValue;
+end;
+
+procedure TGraphQLParam.SetParamType(LValue: TGraphQLVariableType);
+begin
+  FParamType := LValue;
+end;
+
+procedure TGraphQLParam.SetRequired(LValue: Boolean);
+begin
+  FRequired := LValue;
 end;
 
 end.

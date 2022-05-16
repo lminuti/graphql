@@ -14,7 +14,8 @@ uses
   GraphQL.Resolver.Rtti in '..\..\Source\GraphQL.Resolver.Rtti.pas',
   GraphQL.Core.Attributes in '..\..\Source\GraphQL.Core.Attributes.pas',
   GraphQL.Utils.Rtti in '..\..\Source\GraphQL.Utils.Rtti.pas',
-  GraphQL.Query in '..\..\Source\GraphQL.Query.pas';
+  GraphQL.Query in '..\..\Source\GraphQL.Query.pas',
+  Demo.Form.Parameters in 'Demo.Form.Parameters.pas' {ParametersForm};
 
 {$R *.res}
 

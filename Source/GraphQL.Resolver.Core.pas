@@ -49,6 +49,26 @@ type
     function Resolve(AParams: TGraphQLParams): TValue;
   end;
 
+  IGraphQLVariables = interface
+    ['{6DF8CDD1-B969-49AD-96EC-F555A08C9576}']
+    procedure Clear;
+    function SetVariable(const AName: string; AValue: TValue): IGraphQLVariables;
+    function GetVariable(const AName: string): TValue;
+    function VariableExists(const AName: string): Boolean;
+  end;
+
+  TGraphQLVariables = class(TInterfacedObject, IGraphQLVariables)
+  private
+    FVariables: TDictionary<string,TValue>;
+    procedure Clear;
+    function SetVariable(const AName: string; AValue: TValue): IGraphQLVariables;
+    function GetVariable(const AName: string): TValue;
+    function VariableExists(const AName: string): Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
 implementation
 
 { TGraphQLParams }
@@ -79,6 +99,42 @@ end;
 function TGraphQLParams.GetEnumerator: TDictionary<string, TValue>.TPairEnumerator;
 begin
   Result := FParams.GetEnumerator;
+end;
+
+{ TGraphQLVariables }
+
+procedure TGraphQLVariables.Clear;
+begin
+  FVariables.Clear;
+end;
+
+constructor TGraphQLVariables.Create;
+begin
+  inherited;
+  FVariables := TDictionary<string,TValue>.Create;
+end;
+
+destructor TGraphQLVariables.Destroy;
+begin
+  FVariables.Free;
+  inherited;
+end;
+
+function TGraphQLVariables.GetVariable(const AName: string): TValue;
+begin
+  Result := FVariables[AName];
+end;
+
+function TGraphQLVariables.SetVariable(const AName: string;
+  AValue: TValue): IGraphQLVariables;
+begin
+  FVariables.AddOrSetValue(AName, AValue);
+  Result := Self;
+end;
+
+function TGraphQLVariables.VariableExists(const AName: string): Boolean;
+begin
+  Result := FVariables.ContainsKey(AName);
 end;
 
 end.

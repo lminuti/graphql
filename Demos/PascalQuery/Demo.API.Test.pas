@@ -70,6 +70,7 @@ function RollDice(NumDices, NumSides: Integer): Integer;
 function ReverseString(const Value: string): string;
 
 function StarWarsHero(const Id: string): TStarWarsHero;
+function StarWarsHeroByEpisode(const Episode: string): TStarWarsHeros;
 
 implementation
 
@@ -105,6 +106,27 @@ begin
     Result := TStarWarsHero.Create('Darth Sidious', 1.73)
   else
     raise Exception.CreateFmt('Hero [%s] not found', [Id]);
+end;
+
+function StarWarsHeroByEpisode(const Episode: string): TStarWarsHeros;
+begin
+  Result := [];
+  if Episode = 'NEWHOPE' then
+  begin
+    Result := Result + [TStarWarsHero.Create('Luke Skywalker', 1.72)];
+    Result := Result + [TStarWarsHero.Create('Han Solo', 1.8)];
+    Result := Result + [TStarWarsHero.Create('Leia Organa', 1.55)];
+  end
+  else if Episode = 'EMPIRE' then
+  begin
+    Result := Result + [TStarWarsHero.Create('Han Solo', 1.8)];
+  end
+  else if Episode = 'JEDI' then
+  begin
+    Result := Result + [TStarWarsHero.Create('Leia Organa', 1.55)];
+  end
+  else
+    raise Exception.CreateFmt('Episode [%s] not found', [Episode]);
 end;
 
 { TStarWarsHero }

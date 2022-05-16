@@ -34,6 +34,8 @@ type
     function ContentText: string;
   end;
 
+  TGraphQLHTTPRequestEvent = procedure (Sender: TObject; AHttpClient: TIdHttp) of object;
+
   TGraphQLHTTPResponse = class(TInterfacedObject, IGraphQLHTTPResponse)
   protected
     FHeaders: TDictionary<string,string>;
@@ -66,6 +68,8 @@ type
   private
     FEntityMap: TObjectDictionary<string,TGraphQLReSTEntity>;
     FHTTPRequestBuilder: TFunc<string, IGraphQLHTTPResponse>;
+    FBeforeRequestEvent: TGraphQLHTTPRequestEvent;
+    FAfterRequestEvent: TGraphQLHTTPRequestEvent;
     function BuildUrl(AEntity: TGraphQLReSTEntity; AParams: TGraphQLParams): string;
     function ValueToString(LValue: TValue): string;
     function MakeHTTPRequest(const AUrl: string): IGraphQLHTTPResponse;
@@ -75,6 +79,8 @@ type
     function Resolve(AParams: TGraphQLParams): TValue;
     procedure MapEntity(const AEntity, AUrl: string; const AIdProperty: string = 'id');
 
+    property BeforeRequestEvent: TGraphQLHTTPRequestEvent read FBeforeRequestEvent write FBeforeRequestEvent;
+    property AfterRequestEvent: TGraphQLHTTPRequestEvent read FAfterRequestEvent write FAfterRequestEvent;
     property HTTPRequestBuilder: TFunc<string, IGraphQLHTTPResponse> read FHTTPRequestBuilder write FHTTPRequestBuilder;
     constructor Create;
     destructor Destroy; override;
@@ -113,7 +119,11 @@ begin
     begin
       LHttpClient := TIdHTTP.Create(nil);
       try
+        if Assigned(FBeforeRequestEvent) then
+          FBeforeRequestEvent(Self, LHttpClient);
         LResponseText := LHttpClient.Get(AUrl);
+        if Assigned(FAfterRequestEvent) then
+          FAfterRequestEvent(Self, LHttpClient);
         Result := TGraphQLHTTPResponseIndy.Create(LResponseText, LHttpClient.Response);
       finally
         LHttpClient.Free;

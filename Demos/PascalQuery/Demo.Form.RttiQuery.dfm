@@ -11,12 +11,13 @@ object RttiQueryForm: TRttiQueryForm
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
+  OldCreateOrder = True
   OnCreate = FormCreate
   OnKeyUp = FormKeyUp
-  PixelsPerInch = 96
   DesignSize = (
     905
     450)
+  PixelsPerInch = 96
   TextHeight = 16
   object Label1: TLabel
     Left = 8
