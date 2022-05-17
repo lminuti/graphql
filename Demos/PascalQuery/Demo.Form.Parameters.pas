@@ -46,7 +46,10 @@ begin
   begin
     ParamsGrid.Cells[1, LIndex + 1] := FGraphQL.Params[LIndex].ParamName;
     ParamsGrid.Cells[2, LIndex + 1] := VariableTypeToStr(FGraphQL.Params[LIndex].ParamType);
-    ParamsGrid.Cells[3, LIndex + 1] := '';
+    if FGraphQL.Params[LIndex].DefaultValue.IsEmpty then
+      ParamsGrid.Cells[3, LIndex + 1] := ''
+    else
+      ParamsGrid.Cells[3, LIndex + 1] := FGraphQL.Params[LIndex].DefaultValue.ToString;
   end;
 end;
 

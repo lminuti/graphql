@@ -41,6 +41,7 @@ end;
 procedure TParametersForm.FormShow(Sender: TObject);
 var
   LIndex: Integer;
+  LDefaultValue: TValue;
 begin
   ParamsGrid.RowCount := FGraphQL.ParamCount + 1;
   ParamsGrid.Cells[1, 0] := 'Name';
@@ -48,9 +49,14 @@ begin
   ParamsGrid.Cells[3, 0] := 'Value';
   for LIndex := 0 to FGraphQL.ParamCount - 1 do
   begin
+    LDefaultValue := FGraphQL.Params[LIndex].DefaultValue;
+
     ParamsGrid.Cells[1, LIndex + 1] := FGraphQL.Params[LIndex].ParamName;
     ParamsGrid.Cells[2, LIndex + 1] := VariableTypeToStr(FGraphQL.Params[LIndex].ParamType);
-    ParamsGrid.Cells[3, LIndex + 1] := '';
+    if LDefaultValue.IsEmpty then
+      ParamsGrid.Cells[3, LIndex + 1] := ''
+    else
+      ParamsGrid.Cells[3, LIndex + 1] := LDefaultValue.ToString;
   end;
 end;
 

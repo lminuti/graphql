@@ -179,6 +179,7 @@ var
   LGraphQLField: IGraphQLField;
   LGraphQLParam: IGraphQLParam;
   LRequiredString: string;
+  LDefaultValueString: string;
 begin
   LRootNode := SyntaxTreeView.Items.AddChildFirst(nil, AGraphQL.Name + ' (query)');
 
@@ -188,9 +189,12 @@ begin
     for LGraphQLParam in AGraphQL.Params do
     begin
       LRequiredString := '';
+      LDefaultValueString := '';
       if LGraphQLParam.Required then
         LRequiredString := ' (required)';
-      SyntaxTreeView.Items.AddChild(LSubNode, LGraphQLParam.ParamName + ':' + VariableTypeToStr(LGraphQLParam.ParamType) + LRequiredString);
+      if not LGraphQLParam.DefaultValue.IsEmpty then
+        LDefaultValueString := ' (default: ' + LGraphQLParam.DefaultValue.ToString + ')';
+      SyntaxTreeView.Items.AddChild(LSubNode, LGraphQLParam.ParamName + ':' + VariableTypeToStr(LGraphQLParam.ParamType) + LRequiredString + LDefaultValueString);
     end;
   end;
 

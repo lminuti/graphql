@@ -49,11 +49,11 @@ type
     FOnNeedVariable: TOnNeedVariableEvent;
     FAutoFree: Boolean;
     FOnFreeObject: TOnFreeObjectEvent;
-    function GetVariable(LArgument: IGraphQLArgument; AVariables: IGraphQLVariables): TValue;
-    function Resolve(AParams: TGraphQLParams; AVariables: IGraphQLVariables): TValue; overload;
-    function Resolve(AField: IGraphQLField; AParent: TJSONObject; AVariables: IGraphQLVariables): TValue; overload;
-    function ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject; AVariables: IGraphQLVariables): TJSONValue;
-    function ValueToJSON(AValue: TValue; AField: IGraphQLField; AVariables: IGraphQLVariables): TJSONValue;
+    function GetVariable(AGraphQL: IGraphQL; LArgument: IGraphQLArgument; AVariables: IGraphQLVariables): TValue;
+    function Resolve(AGraphQL: IGraphQL; AParams: TGraphQLParams; AVariables: IGraphQLVariables): TValue; overload;
+    function Resolve(AGraphQL: IGraphQL; AField: IGraphQLField; AParent: TJSONObject; AVariables: IGraphQLVariables): TValue; overload;
+    function ObjectToJSON(AGraphQL: IGraphQL; AObject: TObject; AGraphQLObject: IGraphQLObject; AVariables: IGraphQLVariables): TJSONValue;
+    function ValueToJSON(AGraphQL: IGraphQL; AValue: TValue; AField: IGraphQLField; AVariables: IGraphQLVariables): TJSONValue;
   public
     procedure RegisterFunction(const AFunctionName: string; AFunc: TGraphQLFunc);
     procedure RegisterResolver(AResolver: IGraphQLResolver);
@@ -98,7 +98,7 @@ begin
   inherited;
 end;
 
-function TGraphQLQuery.GetVariable(LArgument: IGraphQLArgument; AVariables: IGraphQLVariables): TValue;
+function TGraphQLQuery.GetVariable(AGraphQL: IGraphQL; LArgument: IGraphQLArgument; AVariables: IGraphQLVariables): TValue;
 begin
   if AVariables.VariableExists(LArgument.Name) then
   begin
@@ -111,7 +111,10 @@ begin
     Exit;
   end;
 
-  raise EGraphQLError.CreateFmt('Variable [%s] not found', [LArgument.Name]);
+  Result := AGraphQL.ParamByName(LArgument.Name).DefaultValue;
+
+  if Result.IsEmpty then
+    raise EGraphQLError.CreateFmt('Variable [%s] not found', [LArgument.Name]);
 end;
 
 procedure TGraphQLQuery.RegisterFunction(const AFunctionName: string;
@@ -130,7 +133,7 @@ begin
   FSerializerFunc := AFunc;
 end;
 
-function TGraphQLQuery.Resolve(AField: IGraphQLField; AParent: TJSONObject; AVariables: IGraphQLVariables): TValue;
+function TGraphQLQuery.Resolve(AGraphQL: IGraphQL; AField: IGraphQLField; AParent: TJSONObject; AVariables: IGraphQLVariables): TValue;
 var
   LArgument: IGraphQLArgument;
   LParams: TGraphQLParams;
@@ -142,7 +145,7 @@ begin
     for LArgument in AField.Arguments do
     begin
       if TGraphQLArgumentAttribute.Variable in LArgument.Attributes then
-        LParamDictionary.Add(LArgument.Name, GetVariable(LArgument, AVariables))
+        LParamDictionary.Add(LArgument.Name, GetVariable(AGraphQL, LArgument, AVariables))
       else
         LParamDictionary.Add(LArgument.Name, LArgument.Value);
     end;
@@ -153,13 +156,13 @@ begin
       LFieldName := AField.FieldName;
 
     LParams := TGraphQLParams.Create(LFieldName, LParamDictionary, AParent);
-    Result := Resolve(LParams, AVariables);
+    Result := Resolve(AGraphQL, LParams, AVariables);
   finally
     LParamDictionary.Free;
   end;
 end;
 
-function TGraphQLQuery.Resolve(AParams: TGraphQLParams; AVariables: IGraphQLVariables): TValue;
+function TGraphQLQuery.Resolve(AGraphQL: IGraphQL; AParams: TGraphQLParams; AVariables: IGraphQLVariables): TValue;
 var
   LFunc: TGraphQLFunc;
   LResolver: IGraphQLResolver;
@@ -187,7 +190,7 @@ begin
   try
     for LField in AGraphQL.Fields do
     begin
-      LJSONObject.AddPair(LField.FieldAlias, ValueToJSON(Resolve(LField, nil, AVariables), LField, AVariables));
+      LJSONObject.AddPair(LField.FieldAlias, ValueToJSON(AGraphQL, Resolve(AGraphQL, LField, nil, AVariables), LField, AVariables));
     end;
     Result := LJSONObject.ToJSON;
   finally
@@ -195,7 +198,7 @@ begin
   end;
 end;
 
-function TGraphQLQuery.ValueToJSON(AValue: TValue; AField: IGraphQLField; AVariables: IGraphQLVariables): TJSONValue;
+function TGraphQLQuery.ValueToJSON(AGraphQL: IGraphQL; AValue: TValue; AField: IGraphQLField; AVariables: IGraphQLVariables): TJSONValue;
 var
   LGraphQLObject: IGraphQLObject;
   LIndex: Integer;
@@ -217,7 +220,7 @@ begin
         LGraphQLObject := nil;
 
       try
-        Result := ObjectToJSON(AValue.AsObject, LGraphQLObject, AVariables);
+        Result := ObjectToJSON(AGraphQL, AValue.AsObject, LGraphQLObject, AVariables);
       finally
         if Assigned(FOnFreeObject) then
           FOnFreeObject(Self, AValue.AsObject, LAutoFree);
@@ -232,7 +235,7 @@ begin
       try
         for LIndex := 0 to AValue.GetArrayLength - 1 do
         begin
-          LJsonValue := ValueToJSON(AValue.GetArrayElement(LIndex), AField, AVariables);
+          LJsonValue := ValueToJSON(AGraphQL, AValue.GetArrayElement(LIndex), AField, AVariables);
           LJsonArray.AddElement(LJsonValue);
         end;
       except
@@ -257,7 +260,7 @@ begin
   end;
 end;
 
-function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLObject; AVariables: IGraphQLVariables): TJSONValue;
+function TGraphQLQuery.ObjectToJSON(AGraphQL: IGraphQL; AObject: TObject; AGraphQLObject: IGraphQLObject; AVariables: IGraphQLVariables): TJSONValue;
 
   function CloneObject(LJSONObject: TJSONObject; AGraphQLObject: IGraphQLObject): TJSONObject; forward;
 
@@ -325,7 +328,7 @@ function TGraphQLQuery.ObjectToJSON(AObject: TObject; AGraphQLObject: IGraphQLOb
 
           if not Assigned(LValue) then
           begin
-            LValue := ValueToJSON(Resolve(LField, LJSONObject, AVariables), LField, AVariables);
+            LValue := ValueToJSON(AGraphQL, Resolve(AGraphQL, LField, LJSONObject, AVariables), LField, AVariables);
             LFreeValue := True;
           end;
 

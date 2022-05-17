@@ -25,8 +25,6 @@ object ParametersForm: TParametersForm
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
     TabOrder = 0
     OnSelectCell = ParamsGridSelectCell
-    ExplicitTop = -6
-    ExplicitHeight = 313
   end
   object Toolbar: TPanel
     Left = 0
@@ -38,7 +36,6 @@ object ParametersForm: TParametersForm
     Caption = 'Toolbar'
     ShowCaption = False
     TabOrder = 1
-    ExplicitTop = 316
     object OkButton: TButton
       Left = 15
       Top = 6

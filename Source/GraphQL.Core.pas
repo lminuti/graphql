@@ -33,6 +33,9 @@ type
   EGraphQLArgumentNotFound = class(EGraphQLError)
   end;
 
+  EGraphQLParameterNotFound = class(EGraphQLError)
+  end;
+
   EGraphQLFieldNotFound = class(EGraphQLError)
   end;
 
@@ -117,10 +120,13 @@ type
     procedure SetParamType(LValue: TGraphQLVariableType);
     function GetRequired: Boolean;
     procedure SetRequired(LValue: Boolean);
+    function GetDefaultValue: TValue;
+    procedure SetDefaultValue(LValue: TValue);
 
     property ParamName: string read GetParamName write SetParamName;
     property ParamType: TGraphQLVariableType read GetParamType write SetParamType;
     property Required: Boolean read GetRequired write SetRequired;
+    property DefaultValue: TValue read GetDefaultValue write SetDefaultValue;
   end;
 
   IGraphQL = interface
@@ -134,6 +140,8 @@ type
     function GetParams: IGraphQLList<IGraphQLParam>;
     procedure AddParam(AParam: IGraphQLParam);
     function ParamCount: Integer;
+    function ParamByName(const AName: string): IGraphQLParam;
+    function FieldByName(const AName: string): IGraphQLField;
 
     property Fields: IGraphQLList<IGraphQLField> read GetFields;
     property Params: IGraphQLList<IGraphQLParam> read GetParams;

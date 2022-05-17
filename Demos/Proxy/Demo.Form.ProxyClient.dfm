@@ -78,7 +78,7 @@ object MainProxyForm: TMainProxyForm
     Font.Name = 'Consolas'
     Font.Style = []
     Lines.Strings = (
-      'query userAndTodo($id: String)'
+      'query userAndTodo($id: Int = 1)'
       '{'
       '  users(id:$id) {'
       '    id'

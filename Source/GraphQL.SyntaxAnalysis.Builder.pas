@@ -219,14 +219,16 @@ begin
   NextToken;
 end;
 
-// Variables = $ identifier : typename
+// Variables = $ identifier : typename [!] [ = defaultValue]
 procedure TGraphQLBuilder.Variable(AGraphQL: IGraphQL);
 var
   LParamName: string;
   LParamType: TGraphQLVariableType;
   LRequired: Boolean;
+  LDefaultValue: TValue;
 begin
   LRequired := False;
+  LDefaultValue := TValue.Empty;
   LParamName := FToken.StringValue;
   Expect(TTokenKind.Variable);
   Expect(TTokenKind.Colon);
@@ -238,7 +240,46 @@ begin
     NextToken;
   end;
 
-  AGraphQL.AddParam(TGraphQLParam.Create(LParamName, LParamType, LRequired));
+  if FToken.Kind = TTokenKind.Assignment then
+  begin
+    NextToken;
+    case LParamType of
+      TGraphQLVariableType.StringType, TGraphQLVariableType.IdType:
+      begin
+        Expect(TTokenKind.StringLiteral, False);
+        LDefaultValue := FToken.StringValue;
+      end;
+      TGraphQLVariableType.IntType:
+      begin
+        Expect(TTokenKind.IntegerLiteral, False);
+        LDefaultValue := FToken.IntegerValue;
+      end;
+      TGraphQLVariableType.FloatType:
+      begin
+        Expect(TTokenKind.FloatLiteral, False);
+        LDefaultValue := FToken.FloatValue;
+      end;
+      TGraphQLVariableType.BooleanType:
+      begin
+        Expect(TTokenKind.Identifier, False);
+        LDefaultValue := StrToBool(FToken.StringValue);
+      end;
+      else
+      begin
+        raise ESyntaxError.Create(
+          Format('Unsupported datatype for variable [%s]', [LParamName]),
+          FToken.LineNumber,
+          FToken.ColumnNumber
+        );
+
+      end;
+    end;
+    NextToken;
+
+  end;
+
+
+  AGraphQL.AddParam(TGraphQLParam.Create(LParamName, LParamType, LRequired, LDefaultValue));
 end;
 
 // Variables = [ variable [ variable ... ] ]

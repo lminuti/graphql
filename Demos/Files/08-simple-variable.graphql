@@ -1,4 +1,4 @@
-query HeroNameAndFriends($episode: String) {
+query HeroNameAndFriends($episode: String = "NEWHOPE") {
   hero(episode: $episode) {
     name
     friends {

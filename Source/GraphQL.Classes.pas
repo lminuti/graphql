@@ -111,6 +111,7 @@ type
     FParamName: string;
     FParamType: TGraphQLVariableType;
     FRequired: Boolean;
+    FDefaultValue: TValue;
   public
     { IGraphQLParam }
     function GetParamName: string;
@@ -119,8 +120,10 @@ type
     procedure SetParamType(LValue: TGraphQLVariableType);
     function GetRequired: Boolean;
     procedure SetRequired(LValue: Boolean);
+    function GetDefaultValue: TValue;
+    procedure SetDefaultValue(LValue: TValue);
 
-    constructor Create(const AParamName: string; AParamType: TGraphQLVariableType; ARequired: Boolean);
+    constructor Create(const AParamName: string; AParamType: TGraphQLVariableType; ARequired: Boolean; ADefaultValue: TValue);
   end;
 
   TGraphQL = class(TInterfacedObject, IGraphQL)
@@ -135,6 +138,8 @@ type
     procedure AddField(AField: IGraphQLField);
     function FieldCount: Integer;
     function GetFields: IGraphQLList<IGraphQLField>;
+    function ParamByName(const AName: string): IGraphQLParam;
+    function FieldByName(const AName: string): IGraphQLField;
 
     function GetParams: IGraphQLList<IGraphQLParam>;
     procedure AddParam(AParam: IGraphQLParam);
@@ -170,6 +175,18 @@ begin
   inherited;
 end;
 
+function TGraphQL.FieldByName(const AName: string): IGraphQLField;
+var
+  LField: IGraphQLField;
+begin
+  Result := nil;
+  for LField in FFields do
+    if LField.FieldName = AName then
+      Exit(LField);
+
+  raise EGraphQLFieldNotFound.CreateFmt('Field [%s] not found', [AName]);
+end;
+
 function TGraphQL.FieldCount: Integer;
 begin
   Result := FFields.Count;
@@ -188,6 +205,18 @@ end;
 function TGraphQL.GetParams: IGraphQLList<IGraphQLParam>;
 begin
   Result := FParams;
+end;
+
+function TGraphQL.ParamByName(const AName: string): IGraphQLParam;
+var
+  LParam: IGraphQLParam;
+begin
+  Result := nil;
+  for LParam in FParams do
+    if LParam.ParamName = AName then
+      Exit(LParam);
+
+  raise EGraphQLParameterNotFound.CreateFmt('Parameter [%s] not found', [AName]);
 end;
 
 function TGraphQL.ParamCount: Integer;
@@ -380,12 +409,18 @@ end;
 { TGraphQLParam }
 
 constructor TGraphQLParam.Create(const AParamName: string;
-  AParamType: TGraphQLVariableType; ARequired: Boolean);
+  AParamType: TGraphQLVariableType; ARequired: Boolean; ADefaultValue: TValue);
 begin
   inherited Create;
   FParamName := AParamName;
   FParamType := AParamType;
   FRequired := ARequired;
+  FDefaultValue := ADefaultValue;
+end;
+
+function TGraphQLParam.GetDefaultValue: TValue;
+begin
+  Result := FDefaultValue;
 end;
 
 function TGraphQLParam.GetParamName: string;
@@ -401,6 +436,11 @@ end;
 function TGraphQLParam.GetRequired: Boolean;
 begin
   Result := FRequired;
+end;
+
+procedure TGraphQLParam.SetDefaultValue(LValue: TValue);
+begin
+  FDefaultValue := LValue;
 end;
 
 procedure TGraphQLParam.SetParamName(const LValue: string);
