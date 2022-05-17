@@ -26,7 +26,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.Rtti, System.JSON,
   IdHttpServer, IdContext, IdCustomHTTPServer, IdHeaderList,
-  GraphQL.Resolver.Core, GraphQL.Query;
+  GraphQL.Core, GraphQL.Resolver.Core, GraphQL.Query;
 
 type
   TAsyncLogEvent = procedure (ASender: TObject; const AMessage: string) of object;
@@ -41,6 +41,7 @@ type
     procedure HandleCreatePostStream(AContext: TIdContext; AHeaders: TIdHeaderList; var VPostStream: TStream);
     procedure HandleCommandGet(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
     procedure HandleDoneWithPostStream(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; var VCanFree: Boolean);
+    function JSONToVariable(AGraphQL: IGraphQL; const LJson: TJSONObject): IGraphQLVariables;
     function GetActive: Boolean;
     procedure SetActive(const Value: Boolean);
 
@@ -176,6 +177,9 @@ var
   LPostStream: TStream;
   LJSONValue: TJSONValue;
   LQuery: string;
+  LVariables: TJSONObject;
+  LGraphQLVariable: IGraphQLVariables;
+  LGraphQL: IGraphQL;
 begin
   LPostStream := TStream(AContext.Data);
   try
@@ -195,9 +199,14 @@ begin
           raise Exception.Create('Invalid request');
 
         LQuery := TJSONObject(LJSONValue).GetValue<string>('query');
+        if not TJSONObject(LJSONValue).TryGetValue<TJSONObject>('variables', LVariables) then
+          LVariables := nil;
+
+        LGraphQL := FQuery.Parse(LQuery);
+        LGraphQLVariable := JSONToVariable(LGraphQL, LVariables);
         AsyncLog('Request: ' + ARequestInfo.Command + ' ' + ARequestInfo.Document + ' body>>> ' + LQuery);
         AResponseInfo.ContentText :=
-          FQuery.Run(LQuery);
+          FQuery.Run(LGraphQL, LGraphQLVariable);
       finally
         LJSONValue.Free;
       end;
@@ -227,6 +236,25 @@ procedure TProxyServer.HandleDoneWithPostStream(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; var VCanFree: Boolean);
 begin
   VCanFree := False;
+end;
+
+function TProxyServer.JSONToVariable(AGraphQL: IGraphQL; const LJson: TJSONObject): IGraphQLVariables;
+var
+  LParam: IGraphQLParam;
+begin
+  Result := TGraphQLVariables.Create;
+  for LParam in AGraphQL.Params do
+  begin
+    case LParam.ParamType of
+      TGraphQLVariableType.StringType: Result.SetVariable(LParam.ParamName, LJson.GetValue<string>(LParam.ParamName));
+      TGraphQLVariableType.IntType: Result.SetVariable(LParam.ParamName, LJson.GetValue<Integer>(LParam.ParamName));
+      TGraphQLVariableType.FloatType: Result.SetVariable(LParam.ParamName, LJson.GetValue<Double>(LParam.ParamName));
+      TGraphQLVariableType.BooleanType: Result.SetVariable(LParam.ParamName, LJson.GetValue<Boolean>(LParam.ParamName));
+      TGraphQLVariableType.IdType: Result.SetVariable(LParam.ParamName, LJson.GetValue<string>(LParam.ParamName));
+      else
+        raise Exception.Create('Parameters type unknown');
+    end;
+  end;
 end;
 
 procedure TProxyServer.SetActive(const Value: Boolean);

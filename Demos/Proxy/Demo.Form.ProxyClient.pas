@@ -68,7 +68,7 @@ implementation
 {$R *.dfm}
 
 uses
-  GraphQL.Utils.JSON;
+  GraphQL.Utils.JSON, Demo.Form.Parameters;
 
 { TMainProxyForm }
 
@@ -120,6 +120,7 @@ end;
 procedure TMainProxyForm.RunQueryButtonClick(Sender: TObject);
 var
   LStringStream: TStringStream;
+  LVariableJSON: string;
 begin
   if not FProxyServer.Active then
   begin
@@ -128,7 +129,11 @@ begin
 
   memLog.Clear;
 
-  LStringStream := TStringStream.Create('{"query":' + TJSONHelper.QuoteString(SourceMemo.Text) + '}', TEncoding.UTF8);
+  LVariableJSON := TParametersForm.GetVariables(SourceMemo.Text);
+  if LVariableJSON <> '' then
+    LVariableJSON := ', "variables": ' + LVariableJSON;
+
+  LStringStream := TStringStream.Create('{"query":' + TJSONHelper.QuoteString(SourceMemo.Text) + LVariableJSON + '}', TEncoding.UTF8);
   try
     ResultMemo.Text := TJSONHelper.PrettyPrint(IdHTTP1.Post('http://localhost:' + edtPort.Text, LStringStream));
   finally

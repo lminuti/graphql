@@ -8,12 +8,13 @@ uses
   GraphQL.Core in '..\..\Source\GraphQL.Core.pas',
   GraphQL.Resolver.Core in '..\..\Source\GraphQL.Resolver.Core.pas',
   GraphQL.Lexer.Core in '..\..\Source\GraphQL.Lexer.Core.pas',
-  GraphQL.SyntaxAnalysis.Builder in '..\..\Source\GraphQL.SyntaxAnalysis.Builder.pas',
   GraphQL.Utils.JSON in '..\..\Source\GraphQL.Utils.JSON.pas',
   GraphQL.Utils.Rtti in '..\..\Source\GraphQL.Utils.Rtti.pas',
   GraphQL.Classes in '..\..\Source\GraphQL.Classes.pas',
   GraphQL.SyntaxAnalysis.Core in '..\..\Source\GraphQL.SyntaxAnalysis.Core.pas',
-  GraphQL.Resolver.ReST in '..\..\Source\GraphQL.Resolver.ReST.pas';
+  GraphQL.Resolver.ReST in '..\..\Source\GraphQL.Resolver.ReST.pas',
+  Demo.Form.Parameters in 'Demo.Form.Parameters.pas' {ParametersForm},
+  GraphQL.SyntaxAnalysis.Builder in '..\..\Source\GraphQL.SyntaxAnalysis.Builder.pas';
 
 {$R *.res}
 

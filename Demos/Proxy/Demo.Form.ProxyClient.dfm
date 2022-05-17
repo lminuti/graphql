@@ -78,8 +78,9 @@ object MainProxyForm: TMainProxyForm
     Font.Name = 'Consolas'
     Font.Style = []
     Lines.Strings = (
+      'query userAndTodo($id: String)'
       '{'
-      '  users(id:1) {'
+      '  users(id:$id) {'
       '    id'
       '    name'
       '    address {'
@@ -185,8 +186,6 @@ object MainProxyForm: TMainProxyForm
     ParentBackground = False
     ShowCaption = False
     TabOrder = 7
-    ExplicitLeft = -6
-    ExplicitWidth = 911
     object Image1: TImage
       Left = 8
       Top = 3
