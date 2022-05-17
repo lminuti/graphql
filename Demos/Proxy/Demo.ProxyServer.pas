@@ -96,14 +96,6 @@ begin
   FHttpServer.OnDoneWithPostStream := HandleDoneWithPostStream;
 
   FQuery := TGraphQLQuery.Create;
-
-  FQuery.RegisterFunction('test',
-    function (AParams: TGraphQLParams) :TValue
-    begin
-      Result := 'ok';
-    end
-  );
-
   FQuery.RegisterResolver(CreateResolver);
 end;
 
