@@ -70,7 +70,7 @@ type
   private
     FTestApi: TTestApi;
   public
-    function Resolve(AParams: TGraphQLParams): TValue;
+    function Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
 
     constructor Create;
     destructor Destroy; override;
@@ -89,21 +89,21 @@ begin
   FQuery.RegisterResolver(TGraphQLRttiResolver.Create(TTestApi, True));
 
   FQuery.RegisterFunction('rollDice',
-    function (AParams: TGraphQLParams) :TValue
+    function (AContext: TObject; AParams: TGraphQLParams) :TValue
     begin
       Result := RollDice(AParams.Get('numDice').AsInteger, AParams.Get('numSides').AsInteger);
     end
   );
 
   FQuery.RegisterFunction('reverseString',
-    function (AParams: TGraphQLParams) :TValue
+    function (AContext: TObject; AParams: TGraphQLParams) :TValue
     begin
       Result := ReverseString(AParams.Get('value').AsString);
     end
   );
 
   FQuery.RegisterFunction('hero',
-    function (AParams: TGraphQLParams) :TValue
+    function (AContext: TObject; AParams: TGraphQLParams) :TValue
     begin
       if AParams.Exists('id') then
         Result := StarWarsHero(AParams.Get('id').AsString)
@@ -183,7 +183,7 @@ begin
   inherited;
 end;
 
-function TTestApiResolver.Resolve(AParams: TGraphQLParams): TValue;
+function TTestApiResolver.Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
 begin
   if AParams.FieldName = 'help' then
   begin

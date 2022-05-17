@@ -34,7 +34,7 @@ type
     function ContentText: string;
   end;
 
-  TGraphQLHTTPRequestEvent = procedure (Sender: TObject; AHttpClient: TIdHttp) of object;
+  TGraphQLHTTPRequestEvent = procedure (AContext: TObject; AHttpClient: TIdHttp) of object;
 
   TGraphQLHTTPResponse = class(TInterfacedObject, IGraphQLHTTPResponse)
   protected
@@ -67,21 +67,21 @@ type
   TGraphQLReSTResolver = class(TInterfacedObject, IGraphQLResolver)
   private
     FEntityMap: TObjectDictionary<string,TGraphQLReSTEntity>;
-    FHTTPRequestBuilder: TFunc<string, IGraphQLHTTPResponse>;
+    FHTTPRequestBuilder: TFunc<string, TObject, IGraphQLHTTPResponse>;
     FBeforeRequestEvent: TGraphQLHTTPRequestEvent;
     FAfterRequestEvent: TGraphQLHTTPRequestEvent;
     function BuildUrl(AEntity: TGraphQLReSTEntity; AParams: TGraphQLParams): string;
     function ValueToString(LValue: TValue): string;
-    function MakeHTTPRequest(const AUrl: string): IGraphQLHTTPResponse;
+    function MakeHTTPRequest(const AUrl: string; AContext: TObject): IGraphQLHTTPResponse;
     procedure InitRequestBuilder;
   public
     { IGraphQLResolver }
-    function Resolve(AParams: TGraphQLParams): TValue;
+    function Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
     procedure MapEntity(const AEntity, AUrl: string; const AIdProperty: string = 'id');
 
     property BeforeRequestEvent: TGraphQLHTTPRequestEvent read FBeforeRequestEvent write FBeforeRequestEvent;
     property AfterRequestEvent: TGraphQLHTTPRequestEvent read FAfterRequestEvent write FAfterRequestEvent;
-    property HTTPRequestBuilder: TFunc<string, IGraphQLHTTPResponse> read FHTTPRequestBuilder write FHTTPRequestBuilder;
+    property HTTPRequestBuilder: TFunc<string, TObject, IGraphQLHTTPResponse> read FHTTPRequestBuilder write FHTTPRequestBuilder;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -112,7 +112,7 @@ end;
 procedure TGraphQLReSTResolver.InitRequestBuilder;
 begin
   FHTTPRequestBuilder :=
-    function (AUrl: string): IGraphQLHTTPResponse
+    function (AUrl: string; AContent: TObject): IGraphQLHTTPResponse
     var
       LHttpClient: TIdHttp;
       LResponseText: string;
@@ -120,10 +120,10 @@ begin
       LHttpClient := TIdHTTP.Create(nil);
       try
         if Assigned(FBeforeRequestEvent) then
-          FBeforeRequestEvent(Self, LHttpClient);
+          FBeforeRequestEvent(AContent, LHttpClient);
         LResponseText := LHttpClient.Get(AUrl);
         if Assigned(FAfterRequestEvent) then
-          FAfterRequestEvent(Self, LHttpClient);
+          FAfterRequestEvent(AContent, LHttpClient);
         Result := TGraphQLHTTPResponseIndy.Create(LResponseText, LHttpClient.Response);
       finally
         LHttpClient.Free;
@@ -197,15 +197,15 @@ begin
 
 end;
 
-function TGraphQLReSTResolver.MakeHTTPRequest(const AUrl: string): IGraphQLHTTPResponse;
+function TGraphQLReSTResolver.MakeHTTPRequest(const AUrl: string; AContext: TObject): IGraphQLHTTPResponse;
 begin
   if not Assigned(FHTTPRequestBuilder) then
     raise EGraphQLError.Create('FHTTPRequestBuilder not assigned');
 
-  Result := FHTTPRequestBuilder(AUrl);
+  Result := FHTTPRequestBuilder(AUrl, AContext);
 end;
 
-function TGraphQLReSTResolver.Resolve(AParams: TGraphQLParams): TValue;
+function TGraphQLReSTResolver.Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
 var
   LEntity: TGraphQLReSTEntity;
   LHTTPResponse: IGraphQLHTTPResponse;
@@ -215,7 +215,7 @@ begin
   begin
     LUrl := BuildUrl(LEntity, AParams);
 
-    LHTTPResponse := MakeHTTPRequest(LUrl);
+    LHTTPResponse := MakeHTTPRequest(LUrl, AContext);
 
     if LHTTPResponse.Header('Content-Type').Contains('application/json') then
       Result := TJSONObject.ParseJSONValue(LHTTPResponse.ContentText)

@@ -24,7 +24,8 @@ unit GraphQL.Resolver.Core;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.JSON, Generics.Collections;
+  System.Classes, System.SysUtils, System.Rtti, System.JSON, Generics.Collections,
+  GraphQL.Core;
 
 type
   TGraphQLParams = record
@@ -46,7 +47,7 @@ type
 
   IGraphQLResolver = interface
     ['{31891A84-FC2B-479A-8D35-8E5EDD3CC359}']
-    function Resolve(AParams: TGraphQLParams): TValue;
+    function Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
   end;
 
   IGraphQLVariables = interface
@@ -68,6 +69,20 @@ type
     constructor Create;
     destructor Destroy; override;
   end;
+
+  TGraphQLContext = class
+  private
+    FGraphQL: IGraphQL;
+    FVariables: IGraphQLVariables;
+    FData: TObject;
+  public
+    property GraphQL: IGraphQL read FGraphQL;
+    property Variables: IGraphQLVariables read FVariables;
+    property Data: TObject read FData;
+
+    constructor Create(AGraphQL: IGraphQL; AVariables: IGraphQLVariables; AData: TObject);
+  end;
+
 
 implementation
 
@@ -135,6 +150,16 @@ end;
 function TGraphQLVariables.VariableExists(const AName: string): Boolean;
 begin
   Result := FVariables.ContainsKey(AName);
+end;
+
+{ TGraphQLContext }
+
+constructor TGraphQLContext.Create(AGraphQL: IGraphQL; AVariables: IGraphQLVariables; AData: TObject);
+begin
+  inherited Create;
+  FGraphQL := AGraphQL;
+  FVariables := AVariables;
+  FData := AData;
 end;
 
 end.

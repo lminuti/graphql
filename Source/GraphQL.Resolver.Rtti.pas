@@ -37,7 +37,7 @@ type
     function CreateInstance: TObject;
   public
     { IGraphQLResolver }
-    function Resolve(AParams: TGraphQLParams): TValue;
+    function Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
 
     constructor Create(AClass: TClass; AClassFactory: TFunc<TObject> = nil; ASingleton: Boolean = False); overload;
     constructor Create(AClass: TClass; ASingleton: Boolean); overload;
@@ -112,7 +112,7 @@ begin
   inherited;
 end;
 
-function TGraphQLRttiResolver.Resolve(AParams: TGraphQLParams): TValue;
+function TGraphQLRttiResolver.Resolve(AContext: TObject; AParams: TGraphQLParams): TValue;
 
   function ValueArrayFromParams(ARttiMethod: TRttiMethod; AParams: TGraphQLParams): TArray<TValue>;
   var
