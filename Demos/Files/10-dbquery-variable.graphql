@@ -1,0 +1,6 @@
+query testById($id: Int = 1) {
+  authors(where: { id: { _eq: $id } }) {
+    id
+    name
+  }
+}

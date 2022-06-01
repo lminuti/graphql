@@ -1,0 +1,6 @@
+query {
+  authors(where: { id: { _eq: 3 } }) {
+    id
+    name
+  }
+}

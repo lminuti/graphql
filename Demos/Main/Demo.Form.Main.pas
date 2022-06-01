@@ -194,7 +194,11 @@ begin
         LRequiredString := ' (required)';
       if not LGraphQLParam.DefaultValue.IsEmpty then
         LDefaultValueString := ' (default: ' + LGraphQLParam.DefaultValue.ToString + ')';
-      SyntaxTreeView.Items.AddChild(LSubNode, LGraphQLParam.ParamName + ':' + VariableTypeToStr(LGraphQLParam.ParamType) + LRequiredString + LDefaultValueString);
+
+//      if LGraphQLParam.ParamType = TGraphQLVariableType.ObjectType then
+//        ShowParamObject(LSubNode, LGraphQLParam.)
+//      else
+        SyntaxTreeView.Items.AddChild(LSubNode, LGraphQLParam.ParamName + ':' + VariableTypeToStr(LGraphQLParam.ParamType) + LRequiredString + LDefaultValueString);
     end;
   end;
 

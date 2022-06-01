@@ -156,7 +156,10 @@ begin
   FilesComboBox.Items.Clear;
   LFiles := TDirectory.GetFiles(FSampleDir);
   for LFileName in LFiles do
-    FilesComboBox.Items.Add(ExtractFileName(LFileName));
+  begin
+    if not LFileName.Contains('dbquery') then
+      FilesComboBox.Items.Add(ExtractFileName(LFileName));
+  end;
 end;
 
 procedure TRttiQueryForm.RunQueryButtonClick(Sender: TObject);

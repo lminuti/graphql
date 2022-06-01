@@ -46,7 +46,9 @@ type
     IntType,
     FloatType,
     BooleanType,
-    IdType
+    IdType,
+    ObjectType,
+    ArrayType
   );
 
   TGraphQLArgumentAttribute = (Variable);
@@ -67,17 +69,27 @@ type
     ['{0471DB6A-6810-4C29-8276-BCB2951DDCF2}']
   end;
 
+  (*
+  IGraphQLArgument = interface;
+
+  IGraphQLArguments = interface(IGraphQLList<IGraphQLArgument>)
+    ['{FC905724-24BA-4A91-A642-37BCAB7D6946}']
+  end;
+  *)
+
   IGraphQLArgument = interface
     ['{9740320C-AC4E-47F4-BAA1-8C9EB7D7BEAB}']
     function GetName: string;
     function GetValue: TValue;
     function GetArgumentType: TGraphQLVariableType;
     function GetAttributes: TGraphQLArgumentAttributes;
+    function GetSubArguments: IGraphQLArgument;
 
     property Name: string read GetName;
     property ArgumentType: TGraphQLVariableType read GetArgumentType;
     property Value: TValue read GetValue;
     property Attributes: TGraphQLArgumentAttributes read GetAttributes;
+    property SubArguments: IGraphQLArgument read GetSubArguments;
   end;
 
   IGraphQLField = interface
@@ -160,7 +172,9 @@ const
     'Int',
     'Float',
     'Boolean',
-    'ID'
+    'ID',
+    'Object',
+    'Array'
   );
 begin
   Result := LTypeStr[AParamType];

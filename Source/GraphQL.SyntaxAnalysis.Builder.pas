@@ -33,6 +33,7 @@ type
     FOwnsScanner: Boolean;
 
     { Rules }
+    function ObjectArgumentStatement: TGraphQLArguments;
     function ArgumentStamement: IGraphQLArgument;
     procedure ArgumentsStatement(AArguments: IGraphQLList<IGraphQLArgument>);
     function FieldStatement(AParentField: IGraphQLField): IGraphQLField;
@@ -42,6 +43,9 @@ type
     procedure Variables(AGraphQL: IGraphQL);
     procedure Variable(AGraphQL: IGraphQL);
     function TypeName(AGraphQL: IGraphQL): TGraphQLVariableType;
+    function ArrayArgumentStatement: TGraphQLArguments;
+    function CreateArgument(const AName: string): IGraphQLArgument;
+    function ArrayItemArgumentStatement(AIndex: Integer): IGraphQLArgument;
   public
     function Build: IGraphQL;
     constructor Create(const ASourceCode :string); reintroduce;
@@ -67,13 +71,10 @@ begin
   Expect(TTokenKind.RightParenthesis);
 end;
 
-// argument = identified : ( string | number | boolean | variable)
+// argument = identified : ( string | number | boolean | object | array | variable )
 function TGraphQLBuilder.ArgumentStamement: IGraphQLArgument;
 var
   LName: string;
-  LType: TGraphQLVariableType;
-  LAttributes: TGraphQLArgumentAttributes;
-  LValue: TValue;
 begin
   Expect(TTokenKind.Identifier, False);
   LName := FToken.StringValue;
@@ -81,29 +82,62 @@ begin
 
   Expect(TTokenKind.Colon);
 
+  Result := CreateArgument(LName);
+end;
+
+// array item = ( string | number | boolean | object | array | variable )
+function TGraphQLBuilder.ArrayItemArgumentStatement(AIndex: Integer): IGraphQLArgument;
+var
+  LName: string;
+begin
+  LName := AIndex.ToString;
+
+  Result := CreateArgument(LName);
+end;
+
+function TGraphQLBuilder.CreateArgument(const AName: string): IGraphQLArgument;
+var
+  LType: TGraphQLVariableType;
+  LAttributes: TGraphQLArgumentAttributes;
+  LValue: TValue;
+begin
   LAttributes := [];
 
   case FToken.Kind of
+    TTokenKind.LeftSquareBracket:
+    begin
+      LType := TGraphQLVariableType.ArrayType;
+      LValue := ArrayArgumentStatement;
+    end;
+    TTokenKind.LeftCurlyBracket:
+    begin
+      LType := TGraphQLVariableType.ObjectType;
+      LValue := ObjectArgumentStatement;
+    end;
     TTokenKind.StringLiteral:
     begin
       LType := TGraphQLVariableType.StringType;
       LValue := FToken.StringValue;
+      NextToken;
     end;
     TTokenKind.IntegerLiteral:
     begin
       LType := TGraphQLVariableType.IntType;
       LValue := FToken.IntegerValue;
+      NextToken;
     end;
     TTokenKind.FloatLiteral:
     begin
       LType := TGraphQLVariableType.FloatType;
       LValue := FToken.FloatValue;
+      NextToken;
     end;
     TTokenKind.Variable:
     begin
       LType := TGraphQLVariableType.UnknownType;
       LValue := FToken.StringValue;
       LAttributes := [TGraphQLArgumentAttribute.Variable];
+      NextToken;
     end;
     TTokenKind.Identifier:
     begin
@@ -120,16 +154,15 @@ begin
       else
       begin
         raise ESyntaxError.Create(Format('String or number expected but identifier [%s] found', [FToken.StringValue]), FToken.LineNumber, FToken.ColumnNumber);
-      end
+      end;
+      NextToken;
     end
     else
-      raise ESyntaxError.Create('String or number expected', FToken.LineNumber, FToken.ColumnNumber);
+      raise ESyntaxError.Create('String, number or object expected', FToken.LineNumber, FToken.ColumnNumber);
 
   end;
 
-  NextToken;
-
-  Result := TGraphQLArgument.Create(LName, LType, LAttributes, LValue);
+  Result := TGraphQLArgument.Create(AName, LType, LAttributes, LValue);
 end;
 
 function TGraphQLBuilder.Build: IGraphQL;
@@ -296,31 +329,90 @@ begin
 end;
 
 
-// GraphQL = 'query' queryname [ Variables ] query | query
+// GraphQL = 'query' [queryname] [ Variables ] query | query
 procedure TGraphQLBuilder.GraphQL(AGraphQL: IGraphQL);
+const
+  DefaultQueryName = 'Anonymous';
 begin
   NextToken;
 
   if FToken.IsIdentifier('query') then
   begin
     NextToken;
-    if not FToken.IsIdentifier then
-      raise ESyntaxError.Create('Identifier expected', FToken.LineNumber, FToken.ColumnNumber);
-
-    AGraphQL.Name := FToken.StringValue;
-    NextToken;
+    if FToken.IsIdentifier then
+    begin
+      AGraphQL.Name := FToken.StringValue;
+      NextToken;
+    end
+    else
+      AGraphQL.Name := DefaultQueryName;
     Variables(AGraphQL);
     Query(AGraphQL);
   end
   else
   begin
-    AGraphQL.Name := 'Anonymous';
+    AGraphQL.Name := DefaultQueryName;
     Query(AGraphQL);
   end;
 
 end;
 
 // object = '{' { field [,] } '}'
+function TGraphQLBuilder.ObjectArgumentStatement: TGraphQLArguments;
+var
+  LArguments: TGraphQLArguments;
+begin
+  LArguments := TGraphQLArguments.Create;
+  try
+
+    Expect(TTokenKind.LeftCurlyBracket);
+
+    (LArguments as IEditableList<IGraphQLArgument>).Add(ArgumentStamement);
+    while FToken.Kind = TTokenKind.Comma do
+    begin
+      NextToken;
+      (LArguments as IEditableList<IGraphQLArgument>).Add(ArgumentStamement);
+    end;
+
+    Expect(TTokenKind.RightCurlyBracket);
+
+    Result := LArguments;
+  except
+    LArguments.Free;
+    raise;
+  end;
+end;
+
+// object = '[' { field [,] } ']'
+function TGraphQLBuilder.ArrayArgumentStatement: TGraphQLArguments;
+var
+  LArguments: TGraphQLArguments;
+  LIndex: Integer;
+begin
+  LArguments := TGraphQLArguments.Create;
+  try
+
+    Expect(TTokenKind.LeftSquareBracket);
+    LIndex := 0;
+
+    (LArguments as IEditableList<IGraphQLArgument>).Add(ArrayItemArgumentStatement(LIndex));
+    while FToken.Kind = TTokenKind.Comma do
+    begin
+      Inc(LIndex);
+      NextToken;
+      (LArguments as IEditableList<IGraphQLArgument>).Add(ArrayItemArgumentStatement(LIndex));
+    end;
+
+    Expect(TTokenKind.RightSquareBracket);
+
+    Result := LArguments;
+  except
+    LArguments.Free;
+    raise;
+  end;
+end;
+
+
 function TGraphQLBuilder.ObjectStatement(AParentField: IGraphQLField): IGraphQLObject;
 var
   LValue: TGraphQLObject;

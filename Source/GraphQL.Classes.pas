@@ -59,8 +59,12 @@ type
     function GetArgumentType: TGraphQLVariableType;
     function GetAttributes: TGraphQLArgumentAttributes;
     function GetValue: TValue;
+    function GetSubArguments: IGraphQLArgument;
 
     constructor Create(const AName: string; AArgumentType: TGraphQLVariableType; AAttributes: TGraphQLArgumentAttributes; AValue: TValue);
+  end;
+
+  TGraphQLArguments = class(TInterfacedList<TGraphQLArgument>)
   end;
 
   TGraphQLObject = class(TInterfacedObject, IGraphQLObject, IGraphQLValue)
@@ -365,6 +369,11 @@ end;
 function TGraphQLArgument.GetName: string;
 begin
   Result := FName;
+end;
+
+function TGraphQLArgument.GetSubArguments: IGraphQLArgument;
+begin
+  raise Exception.Create('Error Message');
 end;
 
 function TGraphQLArgument.GetValue: TValue;

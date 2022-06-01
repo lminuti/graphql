@@ -1,0 +1,14 @@
+query {
+  articles(
+    where: { 
+      _and: [
+        { rating: { _gte: 5 } },
+        { rating: { _lte: 15 } }
+      ]
+    }
+) {
+    id
+    title
+    rating
+  }
+}
