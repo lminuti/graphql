@@ -192,8 +192,11 @@ var
   LFieldAlias: string;
   LValue: IGraphQLValue;
   LArguments: IGraphQLList<IGraphQLArgument>;
-  LGraphQLField: TGraphQLField;
+  LGraphQLField: IGraphQLField;
 begin
+  if FToken.Kind = TTokenKind.Ellipsis then
+    raise ESyntaxError.Create(Format('Fragments not yet supported', [FToken.StringValue]), FToken.LineNumber, FToken.ColumnNumber);
+
   Expect(TTokenKind.Identifier, False);
 
   LFieldName := FToken.StringValue;
@@ -213,19 +216,14 @@ begin
     ArgumentsStatement(LArguments);
 
   LGraphQLField := TGraphQLField.Create(AParentField, LFieldName, LFieldAlias, LArguments);
-  try
 
-    if FToken.Kind = TTokenKind.LeftCurlyBracket then
-      LValue := ObjectStatement(LGraphQLField as IGraphQLField)
-    else
-      LValue := TGraphQLNull.Create;
+  if FToken.Kind = TTokenKind.LeftCurlyBracket then
+    LValue := ObjectStatement(LGraphQLField as IGraphQLField)
+  else
+    LValue := TGraphQLNull.Create;
 
-    LGraphQLField.SetValue(LValue);
+  (LGraphQLField as TGraphQLField).SetValue(LValue);
 
-  except
-    LGraphQLField.Free;
-    raise;
-  end;
   Result := LGraphQLField;
 end;
 
